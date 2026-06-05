@@ -1,5 +1,6 @@
 ---
 import { navigation } from '../data/navigation.js';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 <!DOCTYPE html>
 <html lang="zh-TW">
@@ -8,7 +9,7 @@ import { navigation } from '../data/navigation.js';
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Claude Code 完整指南 — 從入門到 Plugin</title>
   <meta name="description" content="完整的 Claude Code 中文學習指南，涵蓋安裝、模型選擇、CLAUDE.md、Hooks、Skills 與 MCP Plugin。">
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml">
   <script is:inline>
     (function(){const s=localStorage.getItem('cc-theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d))document.documentElement.classList.add('dark')})();
   </script>
@@ -101,7 +102,7 @@ import { navigation } from '../data/navigation.js';
 <body>
   <header>
     <div class="hi">
-      <a href="/" class="logo">
+      <a href={`${base}/`} class="logo">
         <span class="logo-icon">CC</span>
         Claude Code 完整指南
       </a>
@@ -123,13 +124,13 @@ import { navigation } from '../data/navigation.js';
     <p>從安裝到 Plugin，系統化學習 Anthropic 官方 CLI 工具。<br>
        包含 CLAUDE.md 設定、Hooks 自動化、Skills 與 MCP 擴充。</p>
     <div class="hero-actions">
-      <a href="/ch01-what-is-cc" class="btn-primary">
+      <a href={`${base}/ch01-what-is-cc`} class="btn-primary">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3-3 3m-6 0h9"/>
         </svg>
         開始閱讀
       </a>
-      <a href="/ch02-install" class="btn-secondary">
+      <a href={`${base}/ch02-install`} class="btn-secondary">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4"/>
         </svg>
@@ -181,7 +182,7 @@ import { navigation } from '../data/navigation.js';
                 <li class={ch.comingSoon ? 'cs' : ''}>
                   {ch.comingSoon
                     ? ch.title
-                    : <a href={`/${ch.slug}`} style="color:var(--accent);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{ch.title}</a>
+                    : <a href={`${base}/${ch.slug}`} style="color:var(--accent);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{ch.title}</a>
                   }
                 </li>
               ))}

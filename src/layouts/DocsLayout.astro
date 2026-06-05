@@ -9,6 +9,8 @@ const {
 
 import { navigation } from '../data/navigation.js';
 
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
 const currentPart = navigation.find(p =>
   p.chapters.some(ch => ch.slug === currentSlug)
 )?.part ?? 0;
@@ -25,7 +27,7 @@ function isPartOpen(part) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{title ? `${title} | ` : ""}Claude Code 完整指南</title>
   <meta name="description" content={description}>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml">
   <script is:inline>
     (function () {
       const s = localStorage.getItem('cc-theme');
@@ -181,7 +183,7 @@ function isPartOpen(part) {
             <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
           </svg>
         </button>
-        <a href="/" class="site-name">
+        <a href={`${base}/`} class="site-name">
           <span class="logo">CC</span>&nbsp;&nbsp;Claude Code 完整指南
         </a>
       </div>
@@ -214,7 +216,7 @@ function isPartOpen(part) {
               {part.chapters.map((ch) => (
                 <li>
                   <a
-                    href={ch.comingSoon ? undefined : `/${ch.slug}`}
+                    href={ch.comingSoon ? undefined : `${base}/${ch.slug}`}
                     class={[
                       currentSlug === ch.slug ? 'active' : '',
                       ch.comingSoon ? 'cs' : '',
@@ -241,13 +243,13 @@ function isPartOpen(part) {
 
       <nav class="cnav">
         {prevChapter
-          ? <a href={`/${prevChapter.slug}`} class="prev">
+          ? <a href={`${base}/${prevChapter.slug}`} class="prev">
               <span class="nd">← 上一章</span>
               <span class="nt">{prevChapter.title}</span>
             </a>
           : <div class="ph"></div>}
         {nextChapter
-          ? <a href={`/${nextChapter.slug}`} class="next">
+          ? <a href={`${base}/${nextChapter.slug}`} class="next">
               <span class="nd">下一章 →</span>
               <span class="nt">{nextChapter.title}</span>
             </a>
