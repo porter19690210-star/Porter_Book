@@ -1,0 +1,90 @@
+---
+import { Code } from 'astro:components';
+
+interface Props {
+  code: string;
+  lang?: string;
+  label?: string;
+}
+
+const { code, lang = 'text', label } = Astro.props;
+---
+
+<div class="cb-wrap">
+  <div class="cb-bar">
+    <span class="cb-label">{label ?? ''}</span>
+    <button class="cb-copy" data-code={code}>複製</button>
+  </div>
+  <div class="cb-inner">
+    <Code code={code} lang={lang} theme="one-dark-pro" />
+  </div>
+</div>
+
+<style>
+  .cb-wrap {
+    margin-bottom: 1.25rem;
+  }
+
+  .cb-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1a1a2e;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding: 0.18rem 0.5rem 0.18rem 0.75rem;
+    min-height: 1.8rem;
+  }
+
+  .cb-label {
+    color: #a6adc8;
+    font-family: 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.73rem;
+    letter-spacing: 0.04em;
+  }
+
+  .cb-inner :global(pre) {
+    border-radius: 0 0 8px 8px !important;
+    margin-bottom: 0 !important;
+  }
+
+  .cb-copy {
+    background: rgba(255,255,255,0.08);
+    color: #888;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 4px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+
+  .cb-copy:hover {
+    background: rgba(255,255,255,0.18);
+    color: #fff;
+  }
+
+  .cb-copy.copied {
+    color: #4ec9b0;
+    border-color: #4ec9b0;
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.cb-copy').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const code = (btn as HTMLButtonElement).dataset.code;
+      if (!code) return;
+      navigator.clipboard.writeText(code).then(() => {
+        btn.textContent = '已複製!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '複製';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    });
+  });
+</script>

@@ -1,0 +1,124 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const claudeMdModelCode = `# 設定預設模型
+## 預設設定
+- 預設模型：claude-sonnet-4-6
+
+# 或針對不同類型任務說明
+## 模型使用原則
+- 日常開發使用 Sonnet
+- 架構設計任務請切換到 Opus：\`/model claude-opus-4-8\`
+- 快速問答可切換到 Haiku：\`/model claude-haiku-4-5\``;
+---
+<DocsLayout
+  title="如何切換模型"
+  currentSlug="ch05-model-switch"
+  description="三種方式切換 Claude 模型：互動式選單、命令列參數、CLAUDE.md 預設設定。"
+  prevChapter={{ title: "三大模型比較", slug: "ch04-models" }}
+  nextChapter={{ title: "CLAUDE.md", slug: "ch06-claude-md" }}
+>
+  <p class="clabel">第 5 章 · Part 2：模型選擇</p>
+  <h1>如何切換模型</h1>
+  <p class="cdesc">三種切換方式，因應不同場景靈活調整。</p>
+
+  <h2>方式 1：互動式 <code>/model</code> 指令</h2>
+  <p>在互動模式中輸入 <code>/model</code>，會顯示選單讓你選擇：</p>
+
+  <CodeBlock lang="text" label="互動模式" code={`You: /model
+
+Select a model:
+  ❯ claude-sonnet-4-6      (目前)
+    claude-haiku-4-5
+    claude-opus-4-8
+    claude-sonnet-4-5
+    ...
+
+# 或直接帶參數
+You: /model claude-opus-4-8
+✓ 已切換到 claude-opus-4-8`} />
+
+  <p>使用 <code>/model</code> 切換後，設定會成為這個 session 的新預設，下次啟動 <code>claude</code> 時會記住。</p>
+
+  <h2>方式 2：命令列 <code>--model</code> 參數</h2>
+  <p>啟動時直接指定模型，適合臨時切換或腳本使用：</p>
+
+  <CodeBlock lang="bash" label="bash" code={`# 啟動互動模式時指定模型
+claude --model claude-opus-4-8
+
+# 單次指令指定模型
+claude --model claude-opus-4-8 "設計這個購物車系統的資料庫架構"
+
+# 使用縮寫（claude-code 也接受部分名稱）
+claude --model opus "分析這段程式碼的安全漏洞"
+claude --model haiku "把這個變數名改成駝峰式命名"
+claude --model sonnet "重構 src/auth/ 目錄"`} />
+
+  <h2>方式 3：CLAUDE.md 設定預設模型</h2>
+  <p>在 CLAUDE.md 中設定預設模型，讓特定專案永遠使用指定模型：</p>
+
+  <CodeBlock lang="markdown" label="~/.claude/CLAUDE.md 或 ./CLAUDE.md" code={claudeMdModelCode} />
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>CLAUDE.md 中的模型設定</strong>
+      <p>CLAUDE.md 裡的模型設定是給 Claude 看的「提醒」，真正改變預設模型需要透過 <code>/model</code> 指令或 <code>--model</code> 參數。不過把使用原則寫在 CLAUDE.md 可以讓 Claude 在適當時機建議你切換。</p>
+    </div>
+  </div>
+
+  <h2>方式 4：<code>/config</code> 設定介面</h2>
+  <p>透過圖形設定介面永久變更預設模型：</p>
+
+  <CodeBlock lang="text" label="互動模式" code={`You: /config
+# 開啟設定介面，找到 "Default Model" 項目修改`} />
+
+  <h2>確認目前使用的模型</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /status
+
+Status:
+  Version:   2.1.x
+  Model:     claude-sonnet-4-6  ← 目前模型
+  Account:   your@email.com
+  Directory: /your/project`} />
+  <p>也可以看互動介面頂端，通常會顯示目前使用的模型名稱。</p>
+
+  <h2>使用情境速查</h2>
+  <table>
+    <thead>
+      <tr><th>情境</th><th>推薦做法</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>這個任務想用更強的模型</td>
+        <td>互動模式中輸入 <code>/model claude-opus-4-8</code></td>
+      </tr>
+      <tr>
+        <td>這次啟動要用特定模型</td>
+        <td><code>claude --model haiku "..."</code></td>
+      </tr>
+      <tr>
+        <td>腳本/CI 需要固定模型</td>
+        <td><code>claude --model claude-haiku-4-5 --print "..."</code></td>
+      </tr>
+      <tr>
+        <td>整個專案預設用 Opus</td>
+        <td>在 <code>./CLAUDE.md</code> 中寫明，並執行一次 <code>/model claude-opus-4-8</code></td>
+      </tr>
+      <tr>
+        <td>想切回預設</td>
+        <td><code>/model claude-sonnet-4-6</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>省錢技巧：任務分流</strong>
+      <p>同一個工作 session 中，你可以針對不同步驟切換模型。例如：先用 <strong>Opus</strong> 做架構設計，確認方向後切到 <strong>Sonnet</strong> 實作，最後用 <strong>Haiku</strong> 快速補充測試和文件。</p>
+    </div>
+  </div>
+
+</DocsLayout>

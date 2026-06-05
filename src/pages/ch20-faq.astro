@@ -1,0 +1,142 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="常見問題 & Debug"
+  currentSlug="ch20-faq"
+  description="安裝失敗、API 錯誤、token 超限、版本問題——常見問題的快速解法。"
+  prevChapter={{ title: "Permissions 模式", slug: "ch19-permissions" }}
+>
+  <p class="clabel">第 20 章 · Part 7：進階技巧</p>
+  <h1>常見問題 &amp; Debug</h1>
+  <p class="cdesc">遇到問題不要慌。大多數 Claude Code 的問題都有固定的排查步驟。</p>
+
+  <h2>第一步：永遠先跑 <code>/doctor</code></h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /doctor
+
+Checking installation...
+  ✓ Claude Code v2.1.x
+  ✓ Node.js v24.x (if applicable)
+  ✗ Authentication: not logged in  ← 問題找到了
+  ✓ Network: connected
+  ✓ MCP servers: 2/3 connected
+
+Press 'f' to auto-fix detected issues`} />
+
+  <p><kbd>f</kbd> 鍵自動修復大多數常見問題。</p>
+
+  <h2>安裝問題</h2>
+
+  <h3>Windows：irm 安裝失敗</h3>
+  <CodeBlock lang="powershell" label="powershell" code={`# 如果 irm | iex 失敗，改用 WinGet
+winget install Anthropic.ClaudeCode
+
+# 或 npm 方式
+npm install -g @anthropic-ai/claude-code`} />
+
+  <h3>npm 安裝後找不到 claude 指令</h3>
+  <CodeBlock lang="bash" label="bash" code={`# 確認 npm global bin 在 PATH 中
+npm config get prefix
+
+# 加入 PATH（Linux/macOS）
+export PATH="$(npm config get prefix)/bin:$PATH"
+
+# Windows PowerShell
+$env:PATH += ";$(npm config get prefix)"
+
+# 重新安裝
+npm install -g @anthropic-ai/claude-code`} />
+
+  <h2>登入 / 認證問題</h2>
+
+  <h3>API Key 無效</h3>
+  <CodeBlock lang="bash" label="bash" code={`# 確認環境變數是否設定
+echo $ANTHROPIC_API_KEY  # macOS/Linux
+$env:ANTHROPIC_API_KEY   # Windows PowerShell
+
+# 重新登入
+claude /logout
+claude  # 重新走登入流程`} />
+
+  <h3>claude.ai 帳號登入後 token 不足</h3>
+  <p>切換到 API Key 方式，或升級 claude.ai 方案。也可以用 <code>/usage-credits</code> 設定超量使用額度。</p>
+
+  <h2>執行時期問題</h2>
+
+  <h3>Context 超限（對話太長）</h3>
+  <CodeBlock lang="text" label="互動模式" code={`# 壓縮對話歷史
+You: /compact
+
+# 或開新 session
+You: /clear
+
+# 查看目前使用量
+You: /context`} />
+
+  <h3>Claude 卡住不回應</h3>
+  <CodeBlock lang="text" label="操作步驟" code={`1. 按 Ctrl+C 中斷目前執行
+2. 如果無效，再按一次 Ctrl+C 退出
+3. 重新啟動：claude
+4. 用 /resume 恢復上次對話（若需要）`} />
+
+  <h3>工具執行被 Hook 阻擋</h3>
+  <CodeBlock lang="text" label="互動模式" code={`# 查看哪個 hook 觸發了阻擋
+You: /hooks
+
+# 臨時停用特定 hook（在 settings.json 中加上 "disabled": true）
+# 或執行 /doctor 診斷 hook 問題`} />
+
+  <h2>MCP 連線問題</h2>
+  <CodeBlock lang="text" label="互動模式" code={`# 查看 MCP 狀態
+You: /mcp
+
+# 常見原因：
+# 1. 套件未安裝：npm install -g <mcp-server>
+# 2. 路徑錯誤：確認 args 中的路徑
+# 3. env 未設定：確認 settings.json 的 env 區塊
+# 4. 語法錯誤：JSON 格式不對（用 /doctor 檢查）`} />
+
+  <h2>效能與費用問題</h2>
+
+  <h3>費用異常高</h3>
+  <CodeBlock lang="text" label="互動模式" code={`# 查看本次 session 費用
+You: /usage
+
+# 降低費用的方法：
+# 1. 切換到 Haiku：/model claude-haiku-4-5
+# 2. 定期 /compact 壓縮對話
+# 3. 避免反覆讀取大型檔案
+# 4. 用 --print 模式取代互動模式`} />
+
+  <h3>回應很慢</h3>
+  <p>切換到 Haiku 模型（速度最快），或用 <code>/fast</code> 開啟快速模式：</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /fast on   # 開啟快速模式
+You: /model claude-haiku-4-5  # 切換最快模型`} />
+
+  <h2>版本管理</h2>
+  <CodeBlock lang="bash" label="bash" code={`# 查看目前版本
+claude --version
+
+# 更新到最新版
+claude update
+
+# 查看 changelog
+claude /release-notes`} />
+
+  <h2>回報問題</h2>
+  <CodeBlock lang="text" label="互動模式" code={`# 回報 bug 或提供意見
+You: /feedback
+
+# 或直接到 GitHub
+# https://github.com/anthropics/claude-code/issues`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>Debug 心法</strong>
+      <p>先 <code>/doctor</code>，再 <code>/status</code> 確認模型與帳號，最後看 <code>/usage</code> 確認 token 用量。九成的問題都能在這三步找到原因。</p>
+    </div>
+  </div>
+
+</DocsLayout>

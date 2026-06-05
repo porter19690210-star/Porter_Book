@@ -1,0 +1,194 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+
+const mcpServerCode = `import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import {
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js";
+
+const server = new Server(
+  { name: "my-tools", version: "1.0.0" },
+  { capabilities: { tools: {} } }
+);
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({
+  tools: [
+    {
+      name: "get_weather",
+      description: "取得指定城市的天氣",
+      inputSchema: {
+        type: "object",
+        properties: {
+          city: { type: "string", description: "城市名稱" },
+        },
+        required: ["city"],
+      },
+    },
+    {
+      name: "query_db",
+      description: "查詢公司內部資料庫",
+      inputSchema: {
+        type: "object",
+        properties: {
+          sql: { type: "string", description: "SQL 查詢語句（唯讀）" },
+        },
+        required: ["sql"],
+      },
+    },
+  ],
+}));
+
+server.setRequestHandler(CallToolRequestSchema, async (request) => {
+  const { name, arguments: args } = request.params;
+
+  if (name === "get_weather") {
+    const { city } = args as { city: string };
+    const result = await fetchWeather(city);
+    return { content: [{ type: "text", text: JSON.stringify(result) }] };
+  }
+
+  if (name === "query_db") {
+    const { sql } = args as { sql: string };
+    const rows = await db.query(sql);
+    return { content: [{ type: "text", text: JSON.stringify(rows) }] };
+  }
+
+  throw new Error("Unknown tool: " + name);
+});
+
+const transport = new StdioServerTransport();
+await server.connect(transport);`;
+
+const tscApiCode = `const TSC_BASE_URL = process.env.TSC_API_URL || "http://localhost:8080";
+
+// 工具定義
+{
+  name: "search_service",
+  description: "在 TSC 系統中搜尋服務資訊",
+  inputSchema: {
+    type: "object",
+    properties: {
+      keyword: { type: "string" },
+      category: { type: "string", enum: ["network", "storage", "compute"] },
+    },
+    required: ["keyword"],
+  },
+}
+
+// 處理工具呼叫
+if (name === "search_service") {
+  const response = await fetch(
+    TSC_BASE_URL + "/api/services/search?q=" + args.keyword,
+    { headers: { Authorization: "Bearer " + process.env.TSC_TOKEN } }
+  );
+  const data = await response.json();
+  return { content: [{ type: "text", text: JSON.stringify(data) }] };
+}`;
+
+const pythonCode = `from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp import types
+import asyncio
+
+app = Server("my-tools")
+
+@app.list_tools()
+async def list_tools() -> list[types.Tool]:
+    return [
+        types.Tool(
+            name="hello",
+            description="回應問候",
+            inputSchema={"type":"object","properties":{"name":{"type":"string"}},"required":["name"]},
+        )
+    ]
+
+@app.call_tool()
+async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
+    if name == "hello":
+        return [types.TextContent(type="text", text="Hello, " + arguments["name"] + "!")]
+    raise ValueError("Unknown tool: " + name)
+
+async def main():
+    async with stdio_server() as (read, write):
+        await app.run(read, write, app.create_initialization_options())
+
+asyncio.run(main())`;
+---
+<DocsLayout
+  title="自製 MCP Server"
+  currentSlug="ch17-mcp-custom"
+  description="把你的 API 包成 MCP Server，讓 Claude 直接呼叫公司內部工具。"
+  prevChapter={{ title: "安裝 MCP Server", slug: "ch16-mcp-install" }}
+  nextChapter={{ title: "多 Agent 協作", slug: "ch18-multi-agent" }}
+>
+  <p class="clabel">第 17 章 · Part 6：MCP Plugin</p>
+  <h1>自製 MCP Server</h1>
+  <p class="cdesc">把你的 API 包成標準的 MCP Server，讓 Claude 能夠直接呼叫——不只是你用，整個團隊都能用。</p>
+
+  <h2>何時自製 MCP？</h2>
+  <ul>
+    <li>公司有內部 API，想讓 Claude 直接呼叫</li>
+    <li>有一組常用操作，想封裝成 Claude 可呼叫的工具</li>
+    <li>現有 MCP Server 不符合需求，需要自訂邏輯</li>
+    <li>想在團隊間共享同一套工具定義</li>
+  </ul>
+
+  <h2>MCP SDK 安裝</h2>
+  <CodeBlock lang="bash" label="bash" code={`# TypeScript / JavaScript（推薦）
+npm install @modelcontextprotocol/sdk
+
+# Python
+pip install mcp`} />
+
+  <h2>最小可運行範例（TypeScript）</h2>
+  <p>一個提供兩個工具的簡單 MCP Server：</p>
+
+  <CodeBlock lang="typescript" label="my-mcp-server/index.ts" code={mcpServerCode} />
+
+  <h2>建置與設定</h2>
+  <CodeBlock lang="bash" label="bash — 建置" code={`cd my-mcp-server
+npm install
+npx tsc  # 編譯到 dist/index.js`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json — 註冊" code={`{
+  "mcpServers": {
+    "my-tools": {
+      "command": "node",
+      "args": ["C:/path/to/my-mcp-server/dist/index.js"],
+      "env": {
+        "DB_CONNECTION_STRING": "postgresql://...",
+        "WEATHER_API_KEY": "your-key"
+      }
+    }
+  }
+}`} />
+
+  <h2>實戰：包裝公司內部 API</h2>
+  <p>以 TSC API（內部服務查詢系統）為例：</p>
+
+  <CodeBlock lang="typescript" label="tsc-api-mcp/index.ts（節錄）" code={tscApiCode} />
+
+  <h2>Python 版本（更簡潔）</h2>
+  <CodeBlock lang="python" label="my_server.py" code={pythonCode} />
+
+  <CodeBlock lang="json" label="settings.json — Python 版" code={`{
+  "mcpServers": {
+    "my-tools": {
+      "command": "python",
+      "args": ["C:/path/to/my_server.py"]
+    }
+  }
+}`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>MCP Server 的最佳實踐</strong>
+      <p>工具描述（description）要清楚——Claude 靠描述決定何時呼叫哪個工具。只暴露唯讀工具，或在寫入工具加上確認步驟。敏感的 API Key 放在 env 裡，不要 hardcode 在程式碼中。</p>
+    </div>
+  </div>
+
+</DocsLayout>

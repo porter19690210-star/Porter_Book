@@ -1,0 +1,150 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+---
+<DocsLayout
+  title="什麼是 Claude Code？"
+  currentSlug="ch01-what-is-cc"
+  description="了解 Claude Code 的定義、核心能力，以及它與傳統 AI 工具的根本差異。"
+  nextChapter={{ title: "安裝與環境設定", slug: "ch02-install" }}
+>
+  <p class="clabel">第 1 章 · Part 1：入門</p>
+  <h1>什麼是 Claude Code？</h1>
+  <p class="cdesc">一個讓 AI 真正「動手」的工具——不只回答問題，而是直接讀取、修改、執行你的程式碼。</p>
+
+  <h2>一句話定義</h2>
+  <p>
+    <strong>Claude Code</strong> 是 Anthropic 官方開發的 CLI（命令列介面）工具，
+    讓 Claude AI 能夠在你的終端機中直接存取檔案系統、執行指令、操作 Git，
+    以及呼叫各種外部工具——不需要複製貼上，不需要切換視窗。
+  </p>
+  <p>
+    簡單說：你打一句話，Claude 就去做事。改完告訴你結果。
+  </p>
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>官方定義</strong>
+      <p>Claude Code 是 Anthropic 推出的 agentic coding tool，讓開發者透過自然語言與 Claude 協作，完成真實的程式碼任務。</p>
+    </div>
+  </div>
+
+  <h2>代理式 CLI：跟傳統工具差在哪？</h2>
+  <p>傳統的程式設計輔助工具（ChatGPT、GitHub Copilot）是<strong>對話型</strong>的——你貼上程式碼，它給你建議，你再手動套用。</p>
+  <p>Claude Code 是<strong>代理式（Agentic）</strong>的——它能自己主動決定要用哪些工具、以什麼順序執行，直到任務完成。</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>功能</th>
+        <th>ChatGPT / Copilot</th>
+        <th>Claude Code</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>讀取真實檔案</td>
+        <td>❌ 需要手動貼上</td>
+        <td>✅ 直接讀整個專案</td>
+      </tr>
+      <tr>
+        <td>修改並儲存檔案</td>
+        <td>❌ 只給建議</td>
+        <td>✅ 直接編輯儲存</td>
+      </tr>
+      <tr>
+        <td>執行終端機指令</td>
+        <td>❌</td>
+        <td>✅ 可執行 shell 命令</td>
+      </tr>
+      <tr>
+        <td>Git 操作</td>
+        <td>❌</td>
+        <td>✅ commit、diff、branch</td>
+      </tr>
+      <tr>
+        <td>理解整個程式庫</td>
+        <td>△ 需要你提供上下文</td>
+        <td>✅ 自動掃描相關檔案</td>
+      </tr>
+      <tr>
+        <td>多步驟自動化</td>
+        <td>❌ 一次一個問題</td>
+        <td>✅ 規劃並連續執行</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>能做什麼？</h2>
+  <p>Claude Code 配備超過 400 個工具，常見使用場景包括：</p>
+  <ul>
+    <li><strong>Bug 修復</strong>——描述問題，Claude 找到原因並直接修改</li>
+    <li><strong>新功能開發</strong>——從設計到實作，一氣呵成</li>
+    <li><strong>大型重構</strong>——跨多個檔案的系統性修改</li>
+    <li><strong>說明文件</strong>——自動產生 README、API 文件、程式碼註解</li>
+    <li><strong>測試撰寫</strong>——分析程式碼、生成對應的單元測試</li>
+    <li><strong>Debug 輔助</strong>——執行測試、分析錯誤訊息、提出修正</li>
+    <li><strong>程式碼審查</strong>——找出潛在問題、安全漏洞、效能瓶頸</li>
+    <li><strong>Git 工作流</strong>——生成 commit message、管理分支</li>
+  </ul>
+
+  <h2>系統架構</h2>
+  <p>一個請求是如何從你的鍵盤流到最終結果的：</p>
+
+  <div style="border:1px solid var(--border);border-radius:12px;padding:1.75rem;background:var(--bg2);margin:1.5rem 0;font-size:.85rem">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem;font-family:var(--mono)">
+      <div style="padding:.5rem 2rem;background:var(--accent);color:#fff;border-radius:8px;font-weight:600">
+        👤 你（Terminal）
+      </div>
+      <div style="color:var(--muted);font-size:.8rem">↕ 自然語言指令</div>
+      <div style="padding:.5rem 2rem;border:2px solid var(--accent);border-radius:8px;color:var(--text);background:var(--bg);font-weight:600">
+        ⚡ Claude Code CLI
+      </div>
+      <div style="color:var(--muted);font-size:.8rem">↕ HTTPS API 呼叫</div>
+      <div style="padding:.5rem 2rem;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text)">
+        🧠 Claude API（Anthropic）
+      </div>
+      <div style="color:var(--muted);font-size:.8rem">↕ 工具呼叫指令</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;width:100%;max-width:420px">
+        <div style="padding:.5rem .25rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;text-align:center;font-size:.78rem">📁<br/>檔案讀寫</div>
+        <div style="padding:.5rem .25rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;text-align:center;font-size:.78rem">🖥️<br/>Shell 執行</div>
+        <div style="padding:.5rem .25rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;text-align:center;font-size:.78rem">🔀<br/>Git 操作</div>
+        <div style="padding:.5rem .25rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;text-align:center;font-size:.78rem">🔌<br/>MCP 工具</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>查詢迴圈（Agent Loop）</h2>
+  <p>
+    Claude Code 的核心是一個<strong>非同步查詢迴圈</strong>。當你輸入一個指令，它不是執行一次就結束，
+    而是持續循環：呼叫模型 → 收到工具指令 → 執行工具 → 把結果回傳給模型 → 再次呼叫……
+    直到任務完成或你叫停。
+  </p>
+  <p>這就是「代理式」的本質——Claude 自己決定下一步要做什麼。</p>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>跟傳統 CLI 的根本差異</strong>
+      <p><code>grep</code> 不會自己決定順便執行 <code>sed</code>。但 Claude Code 會。這份「自主判斷」是它強大的原因，也是你需要理解它的權限系統的原因（見 Ch07 Permissions）。</p>
+    </div>
+  </div>
+
+  <h2>誰適合用 Claude Code？</h2>
+  <ul>
+    <li>想加速日常開發工作的工程師</li>
+    <li>需要快速了解陌生程式庫的開發者</li>
+    <li>做側專案但時間有限的人</li>
+    <li>想把重複性工作自動化的技術人員</li>
+    <li>任何想把 AI 真正融入開發流程的人</li>
+  </ul>
+
+  <div class="call warn">
+    <span class="ci">⚠️</span>
+    <div>
+      <strong>注意</strong>
+      <p>Claude Code 可以讀寫你的檔案、執行 shell 指令。使用前請了解<a href="/ch07-rules">權限與 Rules 設定</a>，避免意外操作。</p>
+    </div>
+  </div>
+
+</DocsLayout>

@@ -1,0 +1,115 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="Permissions 模式"
+  currentSlug="ch19-permissions"
+  description="理解 Claude Code 的四種權限模式，掌控 AI 可以做哪些事、哪些需要你確認。"
+  prevChapter={{ title: "多 Agent 協作", slug: "ch18-multi-agent" }}
+  nextChapter={{ title: "常見問題 & Debug", slug: "ch20-faq" }}
+>
+  <p class="clabel">第 19 章 · Part 7：進階技巧</p>
+  <h1>Permissions 模式</h1>
+  <p class="cdesc">Claude Code 不是無限制地執行任何事。四種權限模式定義了它能做什麼，以及什麼需要你點頭確認。</p>
+
+  <h2>四種權限模式</h2>
+  <table>
+    <thead>
+      <tr><th>模式</th><th>說明</th><th>適用情境</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>default</strong></td>
+        <td>安全操作自動執行，危險操作需確認</td>
+        <td>日常使用（預設）</td>
+      </tr>
+      <tr>
+        <td><strong>plan</strong></td>
+        <td>只規劃、不執行——所有工具呼叫需手動批准</td>
+        <td>審查 Claude 的計劃後再執行</td>
+      </tr>
+      <tr>
+        <td><strong>auto</strong></td>
+        <td>自動批准大多數操作（高信任模式）</td>
+        <td>自動化腳本、CI/CD</td>
+      </tr>
+      <tr>
+        <td><strong>bypass</strong></td>
+        <td>跳過所有確認——包括危險操作</td>
+        <td>完全自動化環境（謹慎使用）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>切換模式</h2>
+  <CodeBlock lang="bash" label="bash" code={`# 啟動時指定模式
+claude --permission-mode plan   # 規劃模式
+claude --permission-mode auto   # 自動模式
+
+# 在互動模式中切換
+You: /permissions`} />
+
+  <h2>Plan 模式：先看後做</h2>
+  <p>在 plan 模式下，Claude 會描述它打算做什麼，等你批准才執行：</p>
+
+  <CodeBlock lang="text" label="互動模式（plan 模式）" code={`You: 重構 src/auth/ 使用新的 JWT 格式
+
+Claude: 我的執行計劃：
+  1. 讀取 src/auth/jwt.ts（讀取操作）
+  2. 修改 verifyToken 函式（寫入操作）⚠️
+  3. 更新 src/middleware/auth.ts（寫入操作）⚠️
+  4. 執行 npm test（執行操作）⚠️
+
+確認執行這些操作？[y/N]`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>Plan 模式的最佳使用時機</strong>
+      <p>第一次讓 Claude 處理重要任務時，先用 plan 模式看它的計劃，確認沒有意外操作再切回 default 模式執行。</p>
+    </div>
+  </div>
+
+  <h2>自訂允許清單</h2>
+  <p>用 <code>/permissions</code> 永久允許特定操作，不再每次確認：</p>
+
+  <CodeBlock lang="text" label="互動模式" code={`You: /permissions
+
+Permission settings:
+  ✓ Read files          always allowed
+  ✓ Write files         ask first
+  ✓ Run npm scripts     always allowed  ← 你設定的
+  ✗ git push            always denied   ← 你設定的
+  ✓ Bash commands       ask first`} />
+
+  <h2>在 settings.json 設定</h2>
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "permissions": {
+    "allow": [
+      "Bash(npm run *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)"
+    ],
+    "deny": [
+      "Bash(git push *)",
+      "Bash(rm -rf *)"
+    ]
+  }
+}`} />
+
+  <h2>CI/CD 中使用 bypass 模式</h2>
+  <CodeBlock lang="bash" label="GitHub Actions / CI" code={`# CI 環境中完全自動化
+claude --print --permission-mode bypass \
+  "執行測試套件，修復所有失敗的測試，並提交變更"`} />
+
+  <div class="call warn">
+    <span class="ci">⚠️</span>
+    <div>
+      <strong>bypass 模式風險</strong>
+      <p>bypass 模式下，Claude 不會在執行危險操作前請求確認。只在完全受控的環境（如 CI/CD 或 Docker 沙箱）中使用。不建議在本機日常開發使用。</p>
+    </div>
+  </div>
+
+</DocsLayout>

@@ -1,0 +1,99 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="多 Agent 協作"
+  currentSlug="ch18-multi-agent"
+  description="用 subagent、worktree、parallel 任務讓 Claude Code 同時處理多個工作，大幅提升效率。"
+  prevChapter={{ title: "自製 MCP Server", slug: "ch17-mcp-custom" }}
+  nextChapter={{ title: "Permissions 模式", slug: "ch19-permissions" }}
+>
+  <p class="clabel">第 18 章 · Part 7：進階技巧</p>
+  <h1>多 Agent 協作</h1>
+  <p class="cdesc">一個 Claude 不夠用？派出多個 subagent 並行處理，各司其職，最後匯整結果。</p>
+
+  <h2>什麼是 Subagent？</h2>
+  <p>
+    Claude Code 可以在同一個 session 中派出<strong>子代理（subagent）</strong>——
+    每個 subagent 是獨立的 Claude 實例，有自己的訊息歷史、工具集和任務目標。
+    主代理（orchestrator）負責分工協調，subagent 負責執行。
+  </p>
+
+  <h2>使用 <code>/fork</code> 派出背景任務</h2>
+  <CodeBlock lang="text" label="互動模式" code={`# 在背景派出 subagent 執行獨立任務
+You: /fork 分析 src/api/ 目錄的安全性漏洞，完成後回報結果
+
+# 主對話繼續，subagent 在背景跑
+You: 現在我們來重構 src/services/ 的錯誤處理
+
+# 查看背景任務狀態
+You: /tasks`} />
+
+  <h2>使用 <code>/background</code> 背景執行</h2>
+  <CodeBlock lang="text" label="互動模式" code={`# 把目前 session 推到背景繼續執行
+You: /background 繼續完成這個重構，我去做別的事
+
+# 之後用 /tasks 查看所有背景任務
+You: /tasks
+
+Background sessions:
+  [1] refactoring-auth     running  (started 5m ago)
+  [2] security-audit       done     ✓`} />
+
+  <h2>讓 Claude 自動分工</h2>
+  <p>直接告訴 Claude 任務太大，讓它自己決定如何分工：</p>
+
+  <CodeBlock lang="text" label="互動模式" code={`You: 我需要同時做三件事：
+1. 重構 src/auth/ 使用新的 JWT 格式
+2. 為 src/api/ 所有 endpoint 補上 input validation
+3. 更新 README 反映新的 API 格式
+
+請並行處理，不要互相干擾。
+
+Claude: 好，我會派出三個 subagent 分別處理：
+  → subagent-1: 處理 src/auth/ JWT 重構
+  → subagent-2: 處理 src/api/ validation
+  → subagent-3: 更新文件
+  主代理等待所有任務完成後匯整。`} />
+
+  <h2>Worktree 隔離（避免衝突）</h2>
+  <p>
+    多個 subagent 同時修改檔案可能產生衝突。
+    用 <code>--worktree</code> 讓每個 subagent 在獨立的 git worktree 工作：
+  </p>
+
+  <CodeBlock lang="text" label="互動模式" code={`# 每個 subagent 在獨立分支工作
+You: 用 worktree 模式並行重構 auth 和 api 模組`} />
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>什麼時候用多 Agent？</strong>
+      <p>任務可以<strong>獨立分割</strong>時最有效（各自修改不同檔案）。若任務有依賴順序（A 完成後才能做 B），串行執行反而更安全。</p>
+    </div>
+  </div>
+
+  <h2>查看所有 Agent 狀態</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /tasks
+
+Active tasks:
+  [1] security-audit   running   Bash: running pytest...
+  [2] doc-update       done      ✓ README.md updated
+
+You: /agents
+
+Subagent registry:
+  orchestrator  (main)
+  agent-a       working on src/auth/
+  agent-b       working on src/api/`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>費用注意</strong>
+      <p>每個 subagent 都是獨立的 Claude API 呼叫，費用會倍增。用多 agent 前先確認任務真的能並行獲益。簡單的順序任務用單一 agent 就好。</p>
+    </div>
+  </div>
+
+</DocsLayout>

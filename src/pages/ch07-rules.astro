@@ -1,0 +1,145 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="Rules"
+  currentSlug="ch07-rules"
+  description="在 CLAUDE.md 中定義行為規則，約束 Claude 的操作邊界，保護你的專案安全。"
+  prevChapter={{ title: "CLAUDE.md", slug: "ch06-claude-md" }}
+  nextChapter={{ title: "Memory.md", slug: "ch08-memory" }}
+>
+  <p class="clabel">第 7 章 · Part 3：設定與記憶</p>
+  <h1>Rules</h1>
+  <p class="cdesc">告訴 Claude 什麼可以做、什麼不能做。好的 Rules 讓你放心授權，不好的 Rules 讓 Claude 綁手綁腳。</p>
+
+  <h2>Rules 是什麼？</h2>
+  <p>
+    Rules 是寫在 CLAUDE.md 中的<strong>行為約束</strong>。它不是獨立的設定檔，而是 CLAUDE.md 裡的一個段落，
+    告訴 Claude 在執行任務時要遵守哪些邊界。
+  </p>
+  <p>正確的 Rules 設計能讓你<strong>大膽授權</strong>給 Claude 自動執行，同時保護你不踩到危險操作。</p>
+
+  <h2>四大類規則</h2>
+
+  <h3>1. 安全與保護規則</h3>
+  <p>防止意外操作或資安問題：</p>
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`## 安全規則
+- 永遠不要 commit .env 或包含 secret 的檔案
+- 不要在程式碼中 hardcode API key 或密碼
+- 使用資料庫查詢時必須使用 prepared statements（防 SQL Injection）
+- 所有使用者輸入必須驗證後才能使用
+- 不要自動 push 到 main 或 master branch
+- 刪除檔案前一定要先確認`} />
+
+  <h3>2. Git 工作流規則</h3>
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`## Git 規則
+- commit message 使用英文，格式：\`type: description\`
+  type 可以是：feat / fix / refactor / docs / test / chore
+- 不要 force push
+- 不要修改已 push 的 commit history
+- 每次 commit 前先執行 \`npm run typecheck && npm test\``} />
+
+  <h3>3. 程式碼風格規則</h3>
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`## 程式碼規範
+- 使用 TypeScript strict mode，不允許 \`any\`
+- 函式長度控制在 30 行以內；超過則重構
+- 不加不必要的 comment（好的命名就是最好的文件）
+- async 函式必須有 try-catch 或回傳 Result type
+- 不要使用 \`var\`，一律用 \`const\` 或 \`let\`
+- import 按照：外部套件 → 內部模組 → 相對路徑的順序排列`} />
+
+  <h3>4. 禁止行為規則</h3>
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`## 禁止事項
+- 不要修改 package.json 的 version 欄位
+- 不要更動 migrations/ 目錄下的既有檔案（只能新增）
+- 不要在 production config 中開啟 debug 模式
+- 不要安裝未經確認的新 npm 套件（先問我）
+- 不要修改 .github/workflows/ 裡的 CI 設定`} />
+
+  <h2>進階：Path-Scoped Rules</h2>
+  <p>針對特定檔案類型或目錄套用特殊規則，在子目錄的 CLAUDE.md 或用 frontmatter 宣告：</p>
+
+  <CodeBlock lang="markdown" label="src/api/CLAUDE.md（只在 src/api/ 生效）" code={`---
+paths:
+  - "src/api/**/*.ts"
+---
+
+# API 開發規則
+
+- 所有 endpoint 必須驗證使用者身份（除了 /health 和 /auth/*）
+- Request body 必須用 Zod schema 驗證
+- Response 必須包含 \`{ success: boolean, data?: T, error?: string }\` 結構
+- 不要在 handler 裡直接寫 SQL，呼叫 service 層
+- 每個新 endpoint 必須有對應的整合測試`} />
+
+  <h2>Rules 的寫法原則</h2>
+
+  <table>
+    <thead>
+      <tr><th>✅ 好的 Rule</th><th>❌ 不好的 Rule</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>使用 2 格空格縮排</td>
+        <td>好好格式化程式碼</td>
+      </tr>
+      <tr>
+        <td>不要直接刪除檔案，先移到 .trash/ 目錄</td>
+        <td>小心刪除檔案</td>
+      </tr>
+      <tr>
+        <td>commit 前執行 <code>npm test</code></td>
+        <td>確認測試通過再 commit</td>
+      </tr>
+      <tr>
+        <td>API Key 存在環境變數，用 <code>process.env.KEY</code> 讀取</td>
+        <td>不要洩漏敏感資料</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>越具體越好</strong>
+      <p>Rules 的目的是讓 Claude 知道確切的邊界，而不是模糊的原則。「具體可驗證」的規則（可以用 yes/no 判斷是否遵守）比「模糊的價值觀」（好好寫程式）有效得多。</p>
+    </div>
+  </div>
+
+  <h2>用 Hooks 強制執行規則</h2>
+  <p>
+    CLAUDE.md 中的 Rules 依賴 Claude 的「自覺」遵守。如果要<strong>強制執行</strong>（不管 Claude 怎麼想都不能做），
+    需要搭配 <strong>Hooks</strong>（第 9 章）。
+  </p>
+  <p>例如，要完全阻止 Claude 執行 <code>git push</code>，需要設定一個 <code>PreToolUse</code> Hook 來攔截 Bash 工具的呼叫。</p>
+
+  <div class="call warn">
+    <span class="ci">⚠️</span>
+    <div>
+      <strong>Rules ≠ 鐵板</strong>
+      <p>寫在 CLAUDE.md 的規則是<strong>強烈建議</strong>，不是技術層面的強制阻擋。Claude 通常會遵守，但在極少數情況下（如 Claude 認為規則與任務目標衝突）可能不會完全照做。需要硬性阻擋特定操作，請使用 Hooks 或 Permissions 設定。</p>
+    </div>
+  </div>
+
+  <h2>完整範例：一份實際專案的 Rules</h2>
+  <CodeBlock lang="markdown" label="./CLAUDE.md（節錄 Rules 部分）" code={`## 開發規則
+
+### 必須遵守
+- 所有 TypeScript 檔案必須通過 \`tsc --noEmit\`（零型別錯誤）
+- 新功能必須有對應的單元測試（coverage 不低於現有水準）
+- 資料庫操作必須在 transaction 中執行
+- 所有 API endpoint 必須有 rate limiting
+
+### 禁止操作
+- 不要安裝新的 npm 套件（先列清單請我確認）
+- 不要修改 prisma/migrations/ 下的既有 migration 檔案
+- 不要刪除 src/types/ 下的任何型別定義
+- 不要變更現有 API 的 response 結構（breaking change）
+
+### Git 規範
+- commit message 格式：\`feat(scope): description\`
+- 一個 commit 只做一件事
+- 每次 commit 前執行：\`npm run lint && npm run typecheck && npm test\``} />
+
+</DocsLayout>

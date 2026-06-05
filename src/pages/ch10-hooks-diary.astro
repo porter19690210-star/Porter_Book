@@ -1,0 +1,160 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="實戰：自動寫工作日誌"
+  currentSlug="ch10-hooks-diary"
+  description="用 Hooks 實現每次 Claude Code session 結束後，自動把摘要寫入 Obsidian 工作日誌。"
+  prevChapter={{ title: "Hooks 是什麼？", slug: "ch09-hooks-intro" }}
+  nextChapter={{ title: "Hooks 安全性應用", slug: "ch11-hooks-security" }}
+>
+  <p class="clabel">第 10 章 · Part 4：Hooks</p>
+  <h1>實戰：自動寫工作日誌</h1>
+  <p class="cdesc">每次 CC session 結束時，自動把工作紀錄寫入 Obsidian 日誌——不需要手動整理，Hooks 全程代勞。</p>
+
+  <h2>目標</h2>
+  <p>這個章節要實作一個真實的 Hooks 應用：<strong>每次 Claude Code session 結束時，自動把 session 摘要追加到今日的 Obsidian 工作日誌</strong>，路徑為：</p>
+  <CodeBlock lang="text" label="工作日誌路徑" code={`C:\\Obsidian\\vault\\工作日誌\\YYYY-MM-DD.md`} />
+
+  <p>完成後的效果：</p>
+  <ul>
+    <li>打開 CC、做事、關掉——日誌自動更新</li>
+    <li>每個 session 留下時間戳記、工作目錄、Session ID</li>
+    <li>完全不需要手動複製貼上</li>
+  </ul>
+
+  <h2>Step 1：建立 Hook 腳本</h2>
+  <p>先建立腳本目錄（若不存在）：</p>
+  <CodeBlock lang="bash" label="Terminal" code={`mkdir -p ~/.claude/hooks`} />
+
+  <p>建立 PowerShell 腳本 <code>~/.claude/hooks/write-diary.ps1</code>：</p>
+
+  <CodeBlock lang="powershell" label="~/.claude/hooks/write-diary.ps1" code={`# 從 stdin 讀取 session 資料
+$data = $input | ConvertFrom-Json
+$date = Get-Date -Format "yyyy-MM-dd"
+$diaryPath = "C:\\Obsidian\\vault\\工作日誌\\$date.md"
+
+# 準備要寫入的內容
+$entry = @"
+
+---
+## Claude Code Session - $(Get-Date -Format "HH:mm")
+- Session ID: $($data.session_id)
+- 工作目錄: $($data.cwd)
+整理人：Claude Code & Porter
+"@
+
+Add-Content -Path $diaryPath -Value $entry -Encoding UTF8`} />
+
+  <p>腳本說明：</p>
+  <ul>
+    <li><code>$input | ConvertFrom-Json</code> — 讀取 CC 透過 stdin 傳入的 session 資料</li>
+    <li><code>Get-Date -Format "yyyy-MM-dd"</code> — 取得今日日期，組成日誌檔案路徑</li>
+    <li><code>Add-Content</code> — 追加到檔案末尾（不覆蓋），確保 UTF-8 編碼</li>
+  </ul>
+
+  <h2>Step 2：設定 settings.json</h2>
+  <p>在 <code>~/.claude/settings.json</code> 加入 <code>Stop</code> Hook，讓腳本在每次 agent 回應結束後觸發：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File ~/.claude/hooks/write-diary.ps1"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <p>如果你的環境是 macOS / Linux，改用 bash 腳本：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json（Linux/macOS）" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/write-diary.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <h2>Step 3：驗證</h2>
+  <p>測試流程：</p>
+  <ol>
+    <li>開啟 Claude Code：<code>claude</code></li>
+    <li>隨便說幾句話，例如「幫我列出目前目錄的檔案」</li>
+    <li>按 <code>Ctrl+C</code> 或輸入 <code>/exit</code> 結束 session</li>
+    <li>檢查今日日誌檔案是否已更新：</li>
+  </ol>
+
+  <CodeBlock lang="powershell" label="PowerShell" code={`$date = Get-Date -Format "yyyy-MM-dd"
+Get-Content "C:\\Obsidian\\vault\\工作日誌\\$date.md" -Tail 20`} />
+
+  <p>你應該會看到類似這樣的內容被自動追加到日誌末尾：</p>
+
+  <CodeBlock lang="markdown" label="C:\\Obsidian\\vault\\工作日誌\\2026-06-04.md（自動追加的部分）" code={`---
+## Claude Code Session - 14:35
+- Session ID: sess_abc123xyz
+- 工作目錄: C:\\VSCode_Proj\\my-project
+整理人：Claude Code & Porter`} />
+
+  <h2>進階：讓 Claude 寫摘要</h2>
+  <p>上面的腳本只記錄 metadata（session ID、目錄）。如果你想要讓 Claude <strong>自動總結這次 session 做了什麼</strong>，可以改用 <code>prompt</code> 類型的 Hook：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json（使用 prompt 類型）" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "請用 2-3 句繁體中文總結這次 session 完成了什麼工作，格式為條列式。然後呼叫 write_diary 工具把摘要寫入今日工作日誌。"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <p><code>prompt</code> 類型會讓 CC 在 session 結束時，用目前對話的完整 context 執行一次額外的 LLM 推理，生成摘要後再寫入日誌。這樣每篇日誌都會有清楚的工作記錄，而不只是 metadata。</p>
+
+  <h3>組合使用：先跑腳本，再生成摘要</h3>
+  <CodeBlock lang="json" label="~/.claude/settings.json（組合 command + prompt）" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File ~/.claude/hooks/write-diary.ps1"
+          },
+          {
+            "type": "prompt",
+            "prompt": "用一句話總結這次對話的主要成果，追加到今日工作日誌。"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>SessionEnd vs Stop — 差別在哪裡？</strong>
+      <p><strong>Stop</strong> 在每次 agent <em>回應結束後</em>觸發，一次 session 中可能觸發多次（每次 Claude 說完話就觸發一次）。<strong>SessionEnd</strong> 則在整個 session 關閉時才觸發一次。寫工作日誌通常用 <strong>Stop</strong> 或 <strong>SessionEnd</strong> 都可以；如果想每次回應都記一筆，用 Stop；想要整個 session 只記一次總結，用 SessionEnd。</p>
+    </div>
+  </div>
+
+</DocsLayout>

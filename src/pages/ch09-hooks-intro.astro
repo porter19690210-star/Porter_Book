@@ -1,0 +1,215 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="Hooks 是什麼？"
+  currentSlug="ch09-hooks-intro"
+  description="深入了解 Claude Code 的 Hooks 系統——生命週期攔截器，讓你在 CC 執行的各個節點插入自訂邏輯。"
+  prevChapter={{ title: "Memory.md", slug: "ch08-memory" }}
+  nextChapter={{ title: "實戰：自動寫工作日誌", slug: "ch10-hooks-diary" }}
+>
+  <p class="clabel">第 9 章 · Part 4：Hooks</p>
+  <h1>Hooks 是什麼？</h1>
+  <p class="cdesc">Hooks 是 Claude Code 的生命週期攔截器——在 CC 執行的各個節點插入你自己的邏輯，從自動化日誌、安全防護到桌面通知，全部交給 Hooks 處理。</p>
+
+  <h2>什麼是 Hooks？</h2>
+  <p>每次 Claude Code 執行工具、回應使用者、或開始／結束 session 時，都會觸發一系列<strong>生命週期事件</strong>。Hooks 讓你可以在這些事件點掛上自己的腳本或服務，實現：</p>
+  <ul>
+    <li>自動記錄每次 session 的工作摘要</li>
+    <li>阻擋危險指令（如 <code>rm -rf</code>）在執行前被攔截</li>
+    <li>任務完成時送出桌面通知</li>
+    <li>審計日誌——記錄所有執行過的 Bash 指令</li>
+    <li>自動化工作流程——呼叫外部 Webhook 或 MCP 工具</li>
+  </ul>
+  <p>與 CLAUDE.md 規則不同，Hooks 是<strong>技術層面的強制執行</strong>，不依賴 Claude 的理解與自覺——腳本說不行就不行。</p>
+
+  <h2>觸發事件一覽表</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>事件名稱</th>
+        <th>觸發時機</th>
+        <th>常用場景</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>PreToolUse</code></td>
+        <td>工具執行<strong>前</strong>（可阻擋）</td>
+        <td>安全檢查、危險指令攔截</td>
+      </tr>
+      <tr>
+        <td><code>PostToolUse</code></td>
+        <td>工具執行<strong>成功後</strong></td>
+        <td>審計日誌、結果通知</td>
+      </tr>
+      <tr>
+        <td><code>PostToolUseFailure</code></td>
+        <td>工具執行<strong>失敗後</strong></td>
+        <td>錯誤告警、自動重試邏輯</td>
+      </tr>
+      <tr>
+        <td><code>UserPromptSubmit</code></td>
+        <td>使用者送出訊息後、Claude 回應前</td>
+        <td>輸入過濾、自動補充 context</td>
+      </tr>
+      <tr>
+        <td><code>Stop</code></td>
+        <td>每次 agent 回應結束後</td>
+        <td>寫工作日誌、通知任務完成</td>
+      </tr>
+      <tr>
+        <td><code>StopFailure</code></td>
+        <td>agent 回應異常終止後</td>
+        <td>錯誤回報、重啟邏輯</td>
+      </tr>
+      <tr>
+        <td><code>SessionStart</code></td>
+        <td>session 開始時</td>
+        <td>環境初始化、載入額外 context</td>
+      </tr>
+      <tr>
+        <td><code>SessionEnd</code></td>
+        <td>整個 session 關閉時</td>
+        <td>清理暫存、寫入最終摘要</td>
+      </tr>
+      <tr>
+        <td><code>PermissionRequest</code></td>
+        <td>Claude 請求執行需確認的操作時</td>
+        <td>自動批准安全操作、攔截高風險操作</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Hook 類型</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>類型</th>
+        <th>說明</th>
+        <th>適用情境</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>command</code></td>
+        <td>執行本機 shell 腳本</td>
+        <td>日誌、安全檢查、本機通知</td>
+      </tr>
+      <tr>
+        <td><code>http</code></td>
+        <td>POST 請求到 Webhook URL</td>
+        <td>Slack 通知、CI/CD 觸發、外部 API</td>
+      </tr>
+      <tr>
+        <td><code>mcp_tool</code></td>
+        <td>呼叫已連接的 MCP 工具</td>
+        <td>整合 MCP 服務、資料庫寫入</td>
+      </tr>
+      <tr>
+        <td><code>prompt</code></td>
+        <td>讓 LLM 評估或生成內容</td>
+        <td>自動摘要、AI 審核輸入內容</td>
+      </tr>
+      <tr>
+        <td><code>agent</code></td>
+        <td>啟動 subagent 執行子任務</td>
+        <td>複雜後處理、多步驟自動化</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>基本設定範例</h2>
+  <p>所有 Hooks 設定都寫在 <code>~/.claude/settings.json</code> 的 <code>hooks</code> 欄位。以下是一個最簡單的範例——每次 Claude 回應結束後，執行一個腳本：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/on-stop.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <p>如果想讓 Hook 只在特定工具觸發，可以加上 <code>matcher</code>：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json（加上 matcher）" code={`{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/check.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <h2>Stdin / Stdout 資料格式</h2>
+  <p>Hook 腳本透過 <strong>stdin</strong> 接收事件資料（JSON 格式），並可透過 <strong>stdout</strong> 回傳決策。</p>
+
+  <h3>PreToolUse 的 stdin 範例</h3>
+  <CodeBlock lang="json" label="stdin（Hook 腳本接收到的資料）" code={`{
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "rm -rf /"
+  },
+  "session_id": "sess_abc123xyz"
+}`} />
+
+  <h3>PostToolUse 的 stdin 範例</h3>
+  <CodeBlock lang="json" label="stdin（工具執行後）" code={`{
+  "tool_name": "Bash",
+  "tool_input": {
+    "command": "ls -la"
+  },
+  "tool_result": "total 48\ndrwxr-xr-x  8 user user 4096 ...",
+  "session_id": "sess_abc123xyz"
+}`} />
+
+  <h2>阻擋工具執行</h2>
+  <p>在 <code>PreToolUse</code> 事件中，Hook 腳本可以<strong>阻擋工具執行</strong>：</p>
+  <ul>
+    <li><strong>exit code 0</strong> — 允許執行，繼續往下</li>
+    <li><strong>exit code 2</strong> — 阻擋執行，將 stderr 輸出顯示給 Claude</li>
+  </ul>
+  <p>腳本也可以輸出 JSON 到 stdout 來提供更詳細的阻擋原因：</p>
+
+  <CodeBlock lang="json" label="stdout（阻擋時輸出）" code={`{
+  "decision": "block",
+  "reason": "Dangerous command detected: rm -rf /"
+}`} />
+
+  <p>完整的阻擋腳本範例（bash）：</p>
+
+  <CodeBlock lang="bash" label="~/.claude/hooks/check.sh" code={`#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['tool_input']['command'])")
+
+if echo "$COMMAND" | grep -qi "rm -rf /"; then
+  echo '{"decision":"block","reason":"拒絕執行：rm -rf / 是危險指令"}' >&2
+  exit 2
+fi
+
+exit 0`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>Hooks 不影響對話速度</strong>
+      <p>除了 PreToolUse 以外，所有 Hook 都在 Claude 回應<strong>之後</strong>才執行，不會拖慢對話的回應時間。PreToolUse 雖然在執行前觸發，但通常腳本執行速度極快（毫秒級），使用者感受不到延遲。</p>
+    </div>
+  </div>
+
+</DocsLayout>

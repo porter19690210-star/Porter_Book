@@ -1,0 +1,255 @@
+---
+import { navigation } from '../data/navigation.js';
+---
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Claude Code 完整指南 — 從入門到 Plugin</title>
+  <meta name="description" content="完整的 Claude Code 中文學習指南，涵蓋安裝、模型選擇、CLAUDE.md、Hooks、Skills 與 MCP Plugin。">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <script is:inline>
+    (function(){const s=localStorage.getItem('cc-theme'),d=window.matchMedia('(prefers-color-scheme: dark)').matches;if(s==='dark'||(!s&&d))document.documentElement.classList.add('dark')})();
+  </script>
+  <style>
+    :root{
+      --bg:#faf9f7;--bg2:#f0ede6;--bg3:#e8e2d8;--border:#ddd8cc;
+      --text:#1a1908;--text2:#3d3930;--muted:#6b6558;
+      --accent:#c0533a;--accent2:#e06b4a;--abg:rgba(192,83,58,.07);
+      --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+      --serif:Georgia,'Noto Serif TC',serif;
+      --mono:'Fira Code','Cascadia Code','Consolas',monospace;
+    }
+    html.dark{
+      --bg:#0f0e0d;--bg2:#1a1916;--bg3:#252320;--border:#333;
+      --text:#f0ede6;--text2:#ccc8be;--muted:#888;
+      --accent:#e07050;--abg:rgba(224,112,80,.1);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.7;transition:background .2s,color .2s}
+    a{color:inherit;text-decoration:none}
+
+    /* ── Header ── */
+    header{position:sticky;top:0;background:rgba(250,249,247,.92);border-bottom:1px solid var(--border);backdrop-filter:blur(8px);z-index:100;height:60px;transition:background .2s}
+    html.dark header{background:rgba(15,14,13,.92)}
+    .hi{display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 1.5rem;max-width:1100px;margin:0 auto}
+    .logo{display:flex;align-items:center;gap:.6rem;font-size:.9rem;font-weight:600;color:var(--text)}
+    .logo:hover{color:var(--accent)}
+    .logo-icon{width:30px;height:30px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.7rem;font-weight:700;font-family:var(--mono)}
+    .ibtn{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer;color:var(--text);border-radius:8px;transition:background .15s,color .15s}
+    .ibtn:hover{background:var(--bg2);color:var(--accent)}
+
+    /* ── Hero ── */
+    .hero{text-align:center;padding:5rem 1.5rem 4rem;max-width:700px;margin:0 auto}
+    .hero-badge{display:inline-block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--accent);background:var(--abg);padding:.35rem .8rem;border-radius:20px;margin-bottom:1.25rem;border:1px solid rgba(192,83,58,.2)}
+    .hero h1{font-size:2.75rem;font-weight:700;font-family:var(--serif);line-height:1.25;letter-spacing:-.03em;color:var(--text);margin-bottom:1.25rem}
+    .hero h1 em{font-style:normal;color:var(--accent)}
+    .hero p{font-size:1.05rem;color:var(--muted);margin-bottom:2rem;line-height:1.7}
+    .hero-actions{display:flex;gap:.75rem;justify-content:center;flex-wrap:wrap}
+    .btn-primary{display:inline-flex;align-items:center;gap:.4rem;background:var(--accent);color:#fff;padding:.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:.9rem;transition:background .15s,transform .1s}
+    .btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+    .btn-secondary{display:inline-flex;align-items:center;gap:.4rem;background:var(--bg2);color:var(--text);padding:.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:.9rem;border:1px solid var(--border);transition:background .15s,border-color .15s}
+    .btn-secondary:hover{background:var(--bg3);border-color:var(--accent)}
+
+    /* ── Stats bar ── */
+    .stats{display:flex;justify-content:center;gap:2.5rem;padding:1.5rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2);flex-wrap:wrap}
+    .stat{text-align:center}
+    .stat-num{font-size:1.5rem;font-weight:700;font-family:var(--serif);color:var(--accent)}
+    .stat-label{font-size:.75rem;color:var(--muted);margin-top:.15rem}
+
+    /* ── Parts grid ── */
+    .parts{max-width:1100px;margin:4rem auto;padding:0 1.5rem}
+    .parts h2{text-align:center;font-size:1.4rem;font-weight:600;font-family:var(--serif);margin-bottom:.5rem}
+    .parts .subtitle{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:2.5rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.25rem}
+    .part-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:1.5rem;transition:border-color .15s,transform .15s,box-shadow .15s;position:relative}
+    .part-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.08)}
+    html.dark .part-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.3)}
+    .part-card.locked{opacity:.65}
+    .part-num{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:.4rem}
+    .part-title{font-size:1.05rem;font-weight:600;font-family:var(--serif);color:var(--text);margin-bottom:.6rem}
+    .part-chapters{list-style:none;display:flex;flex-direction:column;gap:.3rem}
+    .part-chapters li{display:flex;align-items:center;gap:.5rem;font-size:.83rem;color:var(--text2)}
+    .part-chapters li::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0}
+    .part-chapters li.cs{color:var(--muted)}
+    .part-chapters li.cs::before{background:var(--bg3)}
+    .coming-tag{position:absolute;top:.9rem;right:.9rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--bg3);padding:.2rem .5rem;border-radius:4px}
+    .mvp-tag{position:absolute;top:.9rem;right:.9rem;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#2d7a4f;background:rgba(45,122,79,.1);padding:.2rem .5rem;border-radius:4px}
+
+    /* ── Features ── */
+    .features{max-width:1100px;margin:0 auto 5rem;padding:0 1.5rem}
+    .features h2{text-align:center;font-size:1.4rem;font-weight:600;font-family:var(--serif);margin-bottom:.5rem}
+    .features .subtitle{text-align:center;color:var(--muted);font-size:.9rem;margin-bottom:2.5rem}
+    .feat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+    .feat{padding:1.25rem;background:var(--bg2);border-radius:10px;border:1px solid var(--border)}
+    .feat-icon{font-size:1.5rem;margin-bottom:.6rem}
+    .feat-title{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:.3rem}
+    .feat-desc{font-size:.82rem;color:var(--muted);line-height:1.5}
+
+    /* ── Footer ── */
+    footer{text-align:center;padding:2rem 1.5rem;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted)}
+    footer a{color:var(--accent)}
+
+    @media(max-width:600px){
+      .hero h1{font-size:2rem}
+      .stats{gap:1.5rem}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="hi">
+      <a href="/" class="logo">
+        <span class="logo-icon">CC</span>
+        Claude Code 完整指南
+      </a>
+      <button id="tt" class="ibtn" aria-label="切換主題">
+        <svg id="isun" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364-.707-.707M6.343 6.343l-.707-.707m12.728 0-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z"/>
+        </svg>
+        <svg id="imoon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 0 1 8.646 3.646 9.003 9.003 0 0 0 12 21a9.003 9.003 0 0 0 8.354-5.646z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">完整中文教學 · 持續更新</div>
+    <h1>掌握 <em>Claude Code</em>，<br>讓 AI 直接寫你的程式碼</h1>
+    <p>從安裝到 Plugin，系統化學習 Anthropic 官方 CLI 工具。<br>
+       包含 CLAUDE.md 設定、Hooks 自動化、Skills 與 MCP 擴充。</p>
+    <div class="hero-actions">
+      <a href="/ch01-what-is-cc" class="btn-primary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 9l3 3-3 3m-6 0h9"/>
+        </svg>
+        開始閱讀
+      </a>
+      <a href="/ch02-install" class="btn-secondary">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4"/>
+        </svg>
+        安裝教學
+      </a>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num">20</div>
+      <div class="stat-label">章節</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">7</div>
+      <div class="stat-label">主題 Parts</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">模型介紹</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">繁中</div>
+      <div class="stat-label">語言</div>
+    </div>
+  </div>
+
+  <!-- Parts Grid -->
+  <section class="parts">
+    <h2>學習路徑</h2>
+    <p class="subtitle">按照 Part 順序循序漸進，或直接跳到你需要的章節</p>
+    <div class="grid">
+      {navigation.map((part) => {
+        const hasContent = part.chapters.every(ch => !ch.comingSoon);
+        const partialContent = part.chapters.some(ch => !ch.comingSoon);
+        return (
+          <div class={`part-card${part.chapters.every(ch => ch.comingSoon) ? ' locked' : ''}`}>
+            {hasContent
+              ? <span class="mvp-tag">✓ 已完成</span>
+              : partialContent
+                ? <span class="mvp-tag">部分完成</span>
+                : <span class="coming-tag">即將推出</span>
+            }
+            <div class="part-num">Part {part.part}</div>
+            <div class="part-title">{part.partTitle}</div>
+            <ul class="part-chapters">
+              {part.chapters.map(ch => (
+                <li class={ch.comingSoon ? 'cs' : ''}>
+                  {ch.comingSoon
+                    ? ch.title
+                    : <a href={`/${ch.slug}`} style="color:var(--accent);text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{ch.title}</a>
+                  }
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Feature highlights -->
+  <section class="features">
+    <h2>這份指南涵蓋什麼？</h2>
+    <p class="subtitle">不只是基礎操作，更深入 Claude Code 的強大功能</p>
+    <div class="feat-grid">
+      <div class="feat">
+        <div class="feat-icon">⚡</div>
+        <div class="feat-title">快速入門</div>
+        <div class="feat-desc">一行指令安裝，5 分鐘上手。支援 Windows、macOS、Linux。</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🧠</div>
+        <div class="feat-title">三大模型</div>
+        <div class="feat-desc">Haiku / Sonnet / Opus 完整比較，根據任務選最適合的模型。</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">📋</div>
+        <div class="feat-title">CLAUDE.md 設定</div>
+        <div class="feat-desc">讓 Claude 記住你的專案規則、縮寫、偏好設定，不用每次重複說明。</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔗</div>
+        <div class="feat-title">Hooks 自動化</div>
+        <div class="feat-desc">在工具執行前後觸發自訂腳本，自動寫日誌、阻擋危險操作。</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🛠️</div>
+        <div class="feat-title">Skills 擴充</div>
+        <div class="feat-desc">官方六大類 Skills + 自己寫 Skill，把常用工作流程封裝成 Slash Command。</div>
+      </div>
+      <div class="feat">
+        <div class="feat-icon">🔌</div>
+        <div class="feat-title">MCP Plugin</div>
+        <div class="feat-desc">連接任何 API 成為 Claude 工具，打造專屬的 AI 工作環境。</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Claude Code 完整指南 · 以 <a href="https://astro.build" target="_blank">Astro</a> 建置 · 內容持續更新中</p>
+  </footer>
+
+  <script is:inline>
+    const html = document.documentElement;
+    const tt = document.getElementById('tt');
+    const isun = document.getElementById('isun');
+    const imoon = document.getElementById('imoon');
+    function sync() {
+      const dk = html.classList.contains('dark');
+      isun.style.display = dk ? 'block' : 'none';
+      imoon.style.display = dk ? 'none' : 'block';
+    }
+    sync();
+    tt?.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      localStorage.setItem('cc-theme', html.classList.contains('dark') ? 'dark' : 'light');
+      sync();
+    });
+  </script>
+</body>
+</html>

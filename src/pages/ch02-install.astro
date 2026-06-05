@@ -1,0 +1,170 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="安裝與環境設定"
+  currentSlug="ch02-install"
+  description="一步步安裝 Claude Code，設定 API Key 或 claude.ai 帳號登入，完成開發環境配置。"
+  prevChapter={{ title: "什麼是 Claude Code？", slug: "ch01-what-is-cc" }}
+  nextChapter={{ title: "第一次對話", slug: "ch03-first-chat" }}
+>
+  <p class="clabel">第 2 章 · Part 1：入門</p>
+  <h1>安裝與環境設定</h1>
+  <p class="cdesc">兩種安裝方式，五分鐘內完成。支援 Windows、macOS、Linux。</p>
+
+  <h2>系統需求</h2>
+  <table>
+    <thead>
+      <tr><th>項目</th><th>需求</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>作業系統</td><td>macOS 13+、Windows 10 1809+、Ubuntu 20.04+、Debian 10+</td></tr>
+      <tr><td>硬體</td><td>RAM 4 GB+，x64 或 ARM64 處理器</td></tr>
+      <tr><td>網路</td><td>需要連線（與 Anthropic API 通訊）</td></tr>
+      <tr><td>帳號</td><td>claude.ai 帳號 <strong>或</strong> Anthropic API Key（二選一）</td></tr>
+      <tr><td>Node.js</td><td>僅 npm 安裝方式需要 v18+</td></tr>
+    </tbody>
+  </table>
+
+  <h2>方法一：Native Install（推薦）</h2>
+  <p>不需要 Node.js，支援自動背景更新，官方推薦方式。</p>
+
+  <h3>macOS / Linux / WSL</h3>
+  <CodeBlock
+    code={`curl -fsSL https://claude.ai/install.sh | bash`}
+    lang="bash"
+    label="bash"
+  />
+
+  <h3>Windows PowerShell</h3>
+  <CodeBlock
+    code={`irm https://claude.ai/install.ps1 | iex`}
+    lang="powershell"
+    label="powershell"
+  />
+
+  <h3>Windows 套件管理器</h3>
+  <CodeBlock
+    code={`# WinGet
+winget install Anthropic.ClaudeCode
+
+# Homebrew（macOS）
+brew install --cask claude-code`}
+    lang="powershell"
+    label="powershell"
+  />
+
+  <h2>方法二：npm 安裝</h2>
+  <p>需要 Node.js v18 以上。適合已有 Node.js 開發環境的使用者。</p>
+
+  <CodeBlock
+    code={`# 全域安裝
+npm install -g @anthropic-ai/claude-code
+
+# 驗證安裝版本
+claude --version`}
+    lang="bash"
+    label="bash"
+  />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>哪種方式比較好？</strong>
+      <p>Native Install 支援自動更新，不依賴 Node.js 版本，建議優先選用。npm 安裝適合在 CI/CD 環境或已有 Node.js 的工作流中整合。</p>
+    </div>
+  </div>
+
+  <h2>第一次啟動與登入</h2>
+  <p>安裝完成後，執行 <code>claude</code> 進行登入設定。有兩種方式：</p>
+
+  <h3>方式 A：使用 claude.ai 帳號（推薦新手）</h3>
+  <CodeBlock
+    code={`claude`}
+    lang="bash"
+    label="bash"
+  />
+  <p>首次執行會自動開啟瀏覽器，引導你完成 OAuth 授權。登入 claude.ai 帳號即可，不需要另外取得 API Key。</p>
+
+  <h3>方式 B：使用 Anthropic API Key</h3>
+  <p>前往 <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a> 建立 API Key，然後：</p>
+
+  <CodeBlock
+    code={`# 臨時設定（目前 session 有效）
+export ANTHROPIC_API_KEY="sk-ant-api03-..."
+
+# 永久設定（加到 ~/.zshrc 或 ~/.bashrc）
+echo 'export ANTHROPIC_API_KEY="sk-ant-api03-..."' >> ~/.zshrc
+source ~/.zshrc`}
+    lang="bash"
+    label="bash (macOS / Linux)"
+  />
+
+  <CodeBlock
+    code={`# 目前 session 有效
+$env:ANTHROPIC_API_KEY = "sk-ant-api03-..."
+
+# 永久設定（寫入使用者環境變數）
+[System.Environment]::SetEnvironmentVariable(
+  "ANTHROPIC_API_KEY",
+  "sk-ant-api03-...",
+  "User"
+)`}
+    lang="powershell"
+    label="powershell (Windows)"
+  />
+
+  <div class="call warn">
+    <span class="ci">⚠️</span>
+    <div>
+      <strong>不要把 API Key 放進程式碼</strong>
+      <p>永遠不要將 <code>ANTHROPIC_API_KEY</code> 直接寫在程式碼中或 commit 進 git。建議加入 <code>.gitignore</code> 後使用 <code>.env</code> 檔案管理。</p>
+    </div>
+  </div>
+
+  <h2>驗證安裝是否正常</h2>
+  <CodeBlock
+    code={`# 查看版本
+claude --version
+
+# 健康診斷（會自動檢查並提示修復）
+claude /doctor`}
+    lang="bash"
+    label="bash"
+  />
+
+  <p><code>/doctor</code> 是 Claude Code 內建的診斷工具，會檢查安裝、登入狀態、網路連線等，有問題時按 <kbd>f</kbd> 自動修復。</p>
+
+  <h2>VS Code 整合</h2>
+  <p>安裝 VS Code Extension 後，可以在 VS Code 側邊欄直接使用 Claude Code，不需要切換到終端機。</p>
+
+  <ol>
+    <li>開啟 VS Code，前往 Extensions（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd>）</li>
+    <li>搜尋 <code>Claude Code</code>（發行者：Anthropic）</li>
+    <li>點擊安裝</li>
+    <li>安裝後在側邊欄會出現 Claude 圖示</li>
+  </ol>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>其他 IDE 支援</strong>
+      <p>除了 VS Code，Claude Code 也支援 JetBrains IDE（IntelliJ、PyCharm、WebStorm 等），以及 claude.ai 網頁版。</p>
+    </div>
+  </div>
+
+  <h2>手動更新</h2>
+  <CodeBlock
+    code={`# 在 Claude Code 互動介面中執行
+claude update
+
+# 或使用 npm（若以 npm 安裝）
+npm update -g @anthropic-ai/claude-code`}
+    lang="bash"
+    label="bash"
+  />
+
+  <p>Native Install 方式會在背景自動更新，通常不需要手動執行。</p>
+
+</DocsLayout>

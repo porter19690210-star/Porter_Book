@@ -1,0 +1,168 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="CLAUDE.md"
+  currentSlug="ch06-claude-md"
+  description="CLAUDE.md 是 Claude Code 的記憶核心，告訴 Claude 你的專案規則、縮寫、偏好設定。學會正確撰寫，讓每次對話都有最佳起點。"
+  prevChapter={{ title: "如何切換模型", slug: "ch05-model-switch" }}
+  nextChapter={{ title: "Rules", slug: "ch07-rules" }}
+>
+  <p class="clabel">第 6 章 · Part 3：設定與記憶</p>
+  <h1>CLAUDE.md</h1>
+  <p class="cdesc">Claude Code 的「說明書」。每次對話開始前自動載入，告訴 Claude 你是誰、你的專案長什麼樣、你希望它怎麼做事。</p>
+
+  <h2>什麼是 CLAUDE.md？</h2>
+  <p>
+    CLAUDE.md 是一個純 Markdown 文件，在每次 Claude Code 啟動時<strong>自動載入到上下文</strong>。
+    你不需要每次都解釋「我的專案用 TypeScript」「回答請用繁體中文」「不要自動 push git」——
+    寫在 CLAUDE.md 一次，它就永遠記得。
+  </p>
+  <p>把它想成你僱用新工程師時給他的入職文件。</p>
+
+  <h2>四層架構：哪個檔案管哪個範圍</h2>
+  <table>
+    <thead>
+      <tr><th>層級</th><th>位置</th><th>範圍</th><th>適合放什麼</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>全域個人</strong></td>
+        <td><code>~/.claude/CLAUDE.md</code></td>
+        <td>所有專案</td>
+        <td>語言偏好、個人縮寫、時區、通用規則</td>
+      </tr>
+      <tr>
+        <td><strong>專案共享</strong></td>
+        <td><code>./CLAUDE.md</code></td>
+        <td>當前專案（git 追蹤）</td>
+        <td>技術棧、架構說明、team 規範、Build 指令</td>
+      </tr>
+      <tr>
+        <td><strong>本地私有</strong></td>
+        <td><code>./CLAUDE.local.md</code></td>
+        <td>當前專案（不 commit）</td>
+        <td>個人開發偏好、本機路徑、私人 API Key 說明</td>
+      </tr>
+      <tr>
+        <td><strong>子目錄</strong></td>
+        <td><code>./src/CLAUDE.md</code></td>
+        <td>特定目錄</td>
+        <td>該模組的特殊規則（如 API 目錄的驗證規則）</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>優先順序</strong>
+      <p>Claude 會<strong>全部載入</strong>，不是覆蓋——所有層級的 CLAUDE.md 都會被讀取。如果有衝突，越具體的（子目錄層）越優先。建議把通用規則放全域，專案相關放專案根目錄。</p>
+    </div>
+  </div>
+
+  <h2>快速產生 CLAUDE.md</h2>
+  <p>讓 Claude 自動分析你的專案並生成初始版：</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /init`} />
+  <p>Claude 會掃描你的 <code>package.json</code>、<code>README.md</code>、目錄結構，自動填寫常用欄位。之後再手動補充你的個人偏好。</p>
+
+  <h2>標準結構範本</h2>
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`# 專案名稱
+
+## 專案簡介
+一句話說明這個專案是什麼、做什麼用的。
+
+## 技術棧
+- 語言：TypeScript 5.x
+- 框架：Next.js 15 / Fastify
+- 資料庫：PostgreSQL + Prisma ORM
+- 測試：Vitest + Testing Library
+
+## 常用指令
+- Build：\`npm run build\`
+- Dev server：\`npm run dev\`
+- 測試：\`npm test\`
+- 型別檢查：\`npm run typecheck\`
+
+## 架構說明
+- \`src/api/\` — API routes（Fastify plugins）
+- \`src/services/\` — 商業邏輯
+- \`src/db/\` — Prisma schema 與 migrations
+
+## 開發規範
+- 使用 TypeScript strict mode
+- 函式盡量控制在 30 行以內
+- 所有 async 函式必須有 error handling
+
+## 注意事項
+- 不要自動 push 到 main branch
+- 不要修改 package.json 的 version 欄位`} />
+
+  <h2>實際範例：個人全域設定</h2>
+  <p>以下是一份真實的 <code>~/.claude/CLAUDE.md</code> 個人全域設定：</p>
+
+  <CodeBlock lang="markdown" label="~/.claude/CLAUDE.md" code={`# 個人設定
+
+## 身分
+你是我的 AI 助理與分身。
+
+## 回應語言
+請用繁體中文回應，專有名詞（API、CLI、Git 等）保留英文。
+
+## 縮寫對照
+- \`ag\` = Antigravity（主要專案）
+- \`obs\` = Obsidian（筆記工具）
+- \`cc\` = Claude Code（這個工具本身）
+
+## 時區
+永遠使用台北時間（Asia/Taipei, UTC+8）。
+進行日期計算前先執行 \`date\` 確認系統時間。
+
+## 程式碼風格
+- 預設使用 TypeScript
+- 非必要不加 comment（好的命名自己說話）
+- 不要加 try-catch 在永遠不會 throw 的地方
+
+## 安全規則
+- 永遠不要 commit .env 或任何含有 secret 的檔案
+- 不要在程式碼中 hardcode API key`} />
+
+  <h2>Import 語法：拆分管理</h2>
+  <p>當 CLAUDE.md 內容太多時，用 <code>@</code> 語法拆分成多個檔案：</p>
+
+  <CodeBlock lang="markdown" label="CLAUDE.md" code={`# 主設定檔
+
+## 通用規範
+@~/.claude/rules/security.md
+@~/.claude/rules/coding-style.md
+
+## 專案架構
+詳見 @README.md 與 @docs/architecture.md
+
+## API 開發規範
+@src/api/CLAUDE.md`} />
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>Import 規則</strong>
+      <p>支援相對路徑（<code>./docs/rules.md</code>）與絕對路徑（<code>~/.claude/rules.md</code>）。最多 4 層遞迴 import。首次遇到新的外部 import 路徑時，Claude Code 會請你確認是否允許讀取。</p>
+    </div>
+  </div>
+
+  <h2>撰寫建議</h2>
+  <ul>
+    <li><strong>每個 CLAUDE.md 控制在 200 行以內</strong>——太長會降低 Claude 對重要規則的注意力</li>
+    <li><strong>寫具體可驗證的規則</strong>——「使用 2 格縮排」比「好好格式化程式碼」有效</li>
+    <li><strong>用 Markdown 標題組織結構</strong>——方便 Claude 快速找到對應的規則</li>
+    <li><strong>HTML 註解不消耗 token</strong>——維護者筆記可用 <code>&lt;!-- 說明 --&gt;</code>，不影響 Claude 的 context</li>
+    <li><strong>定期更新</strong>——隨著專案演進，過時的規則比沒有規則更糟</li>
+  </ul>
+
+  <h2>用 <code>/memory</code> 管理設定</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /memory
+
+# 會顯示目前載入的記憶檔案，並讓你選擇編輯哪個`} />
+
+</DocsLayout>

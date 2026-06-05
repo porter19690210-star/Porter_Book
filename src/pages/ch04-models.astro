@@ -1,0 +1,175 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+---
+<DocsLayout
+  title="三大模型比較"
+  currentSlug="ch04-models"
+  description="Haiku、Sonnet、Opus 三款模型的速度、費用、能力完整比較，幫你選出最適合的模型。"
+  prevChapter={{ title: "第一次對話", slug: "ch03-first-chat" }}
+  nextChapter={{ title: "如何切換模型", slug: "ch05-model-switch" }}
+>
+  <p class="clabel">第 4 章 · Part 2：模型選擇</p>
+  <h1>三大模型比較</h1>
+  <p class="cdesc">Haiku 4.5、Sonnet 4.6、Opus 4.8——同樣是 Claude，但速度、費用、能力各有差異。選對模型能大幅提升效率並降低成本。</p>
+
+  <h2>快速總覽</h2>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.5rem 0">
+    <!-- Haiku -->
+    <div style="border:1px solid var(--border);border-radius:12px;padding:1.25rem;background:var(--bg2)">
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem">閃電快手</div>
+      <div style="font-size:1.15rem;font-weight:700;font-family:var(--serif);color:var(--text);margin-bottom:.25rem">Haiku 4.5</div>
+      <div style="font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:.75rem">$</div>
+      <ul style="list-style:none;font-size:.82rem;color:var(--text2);display:flex;flex-direction:column;gap:.3rem">
+        <li>⚡ 響應最快</li>
+        <li>💰 費用最低</li>
+        <li>✅ 日常任務</li>
+        <li>✅ 快速問答</li>
+      </ul>
+    </div>
+    <!-- Sonnet -->
+    <div style="border:2px solid var(--accent);border-radius:12px;padding:1.25rem;background:var(--abg);position:relative">
+      <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:.65rem;font-weight:700;padding:.2rem .6rem;border-radius:10px;white-space:nowrap">預設 · 推薦</div>
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:.4rem">平衡之選</div>
+      <div style="font-size:1.15rem;font-weight:700;font-family:var(--serif);color:var(--text);margin-bottom:.25rem">Sonnet 4.6</div>
+      <div style="font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:.75rem">$$</div>
+      <ul style="list-style:none;font-size:.82rem;color:var(--text2);display:flex;flex-direction:column;gap:.3rem">
+        <li>⚡⚡ 速度快</li>
+        <li>🧠 能力強</li>
+        <li>✅ 複雜程式碼</li>
+        <li>✅ 大型重構</li>
+      </ul>
+    </div>
+    <!-- Opus -->
+    <div style="border:1px solid var(--border);border-radius:12px;padding:1.25rem;background:var(--bg2)">
+      <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem">最強大腦</div>
+      <div style="font-size:1.15rem;font-weight:700;font-family:var(--serif);color:var(--text);margin-bottom:.25rem">Opus 4.8</div>
+      <div style="font-size:1.4rem;font-weight:700;color:var(--accent);margin-bottom:.75rem">$$$</div>
+      <ul style="list-style:none;font-size:.82rem;color:var(--text2);display:flex;flex-direction:column;gap:.3rem">
+        <li>🧠🧠🧠 最強推理</li>
+        <li>💰 費用最高</li>
+        <li>✅ 架構設計</li>
+        <li>✅ 困難 Debug</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>詳細規格比較</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>規格</th>
+        <th>Haiku 4.5</th>
+        <th>Sonnet 4.6</th>
+        <th>Opus 4.8</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Model ID</strong></td>
+        <td><code>claude-haiku-4-5</code></td>
+        <td><code>claude-sonnet-4-6</code></td>
+        <td><code>claude-opus-4-8</code></td>
+      </tr>
+      <tr>
+        <td><strong>Context Window</strong></td>
+        <td>200k tokens</td>
+        <td>1M tokens</td>
+        <td>1M tokens</td>
+      </tr>
+      <tr>
+        <td><strong>最大輸出</strong></td>
+        <td>64k tokens</td>
+        <td>64k tokens</td>
+        <td>128k tokens</td>
+      </tr>
+      <tr>
+        <td><strong>輸入費用</strong></td>
+        <td>$1 / 1M tokens</td>
+        <td>$3 / 1M tokens</td>
+        <td>$5 / 1M tokens</td>
+      </tr>
+      <tr>
+        <td><strong>輸出費用</strong></td>
+        <td>$5 / 1M tokens</td>
+        <td>$15 / 1M tokens</td>
+        <td>$25 / 1M tokens</td>
+      </tr>
+      <tr>
+        <td><strong>速度</strong></td>
+        <td>⚡⚡⚡ 最快</td>
+        <td>⚡⚡ 快</td>
+        <td>⚡ 較慢</td>
+      </tr>
+      <tr>
+        <td><strong>推理能力</strong></td>
+        <td>★★★☆☆</td>
+        <td>★★★★☆</td>
+        <td>★★★★★</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>費用是相對的</strong>
+      <p>上面的費用是 API 直接計費。使用 claude.ai 訂閱方案時，費用計算方式不同，依方案的使用額度計算。</p>
+    </div>
+  </div>
+
+  <h2>各模型適用情境</h2>
+
+  <h3>🐇 Haiku 4.5 — 用在這些場合</h3>
+  <ul>
+    <li>快速問答（「這個函式做什麼？」「這個錯誤是什麼意思？」）</li>
+    <li>簡單的程式碼修改（改一個變數名、加一行 import）</li>
+    <li>生成模板程式碼（boilerplate）</li>
+    <li>程式碼格式化或整理</li>
+    <li>需要大量呼叫 API 的自動化場景（成本考量）</li>
+    <li>CI/CD pipeline 中的輔助任務</li>
+  </ul>
+
+  <h3>🏆 Sonnet 4.6 — 日常主力（預設）</h3>
+  <ul>
+    <li>複雜功能開發（多個檔案、邏輯複雜）</li>
+    <li>Bug 分析與修復（需要理解上下文）</li>
+    <li>程式碼重構（保持行為不變的前提下改善結構）</li>
+    <li>撰寫完整的測試套件</li>
+    <li>程式碼審查（找潛在問題）</li>
+    <li>99% 的日常開發任務</li>
+  </ul>
+
+  <h3>🧠 Opus 4.8 — 留給真正困難的任務</h3>
+  <ul>
+    <li>系統架構設計（要考慮擴展性、維護性的大決策）</li>
+    <li>難以重現的複雜 Bug（需要深度追蹤邏輯）</li>
+    <li>效能優化分析（演算法層面的改善）</li>
+    <li>安全性審計（找出深層漏洞）</li>
+    <li>理解和重構年久失修的 legacy code</li>
+    <li>需要多步驟推理的長期任務</li>
+  </ul>
+
+  <h2>費用估算範例</h2>
+  <p>以一個中型功能開發任務為例（約 50k input + 5k output tokens）：</p>
+  <table>
+    <thead>
+      <tr><th>模型</th><th>Input</th><th>Output</th><th>合計</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Haiku 4.5</td><td>$0.05</td><td>$0.025</td><td><strong>~$0.075</strong></td></tr>
+      <tr><td>Sonnet 4.6</td><td>$0.15</td><td>$0.075</td><td><strong>~$0.225</strong></td></tr>
+      <tr><td>Opus 4.8</td><td>$0.25</td><td>$0.125</td><td><strong>~$0.375</strong></td></tr>
+    </tbody>
+  </table>
+  <p>實際費用因 Prompt Cache 命中率而大幅降低。Claude Code 會自動快取重複的上下文（如 CLAUDE.md、常讀取的檔案），快取讀取費用約為一般費用的 10%。</p>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>實用建議</strong>
+      <p>從 <strong>Sonnet</strong> 開始。它是最佳預設。當你發現任務太簡單不需要這麼強時，切到 Haiku 省錢；當 Sonnet 卡關時，升級到 Opus。下一章會教你怎麼切換。</p>
+    </div>
+  </div>
+
+</DocsLayout>

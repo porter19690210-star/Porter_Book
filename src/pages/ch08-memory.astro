@@ -1,0 +1,182 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="Memory.md"
+  currentSlug="ch08-memory"
+  description="CLAUDE.md 是你手動設定的，Memory.md 是 Claude 自動累積的。了解兩者的差異與三層記憶架構。"
+  prevChapter={{ title: "Rules", slug: "ch07-rules" }}
+>
+  <p class="clabel">第 8 章 · Part 3：設定與記憶</p>
+  <h1>Memory.md</h1>
+  <p class="cdesc">Claude 的長期記憶——不是你寫的，是它在工作過程中自己學到的。跨對話、跨 session，讓 Claude 越來越了解你。</p>
+
+  <h2>CLAUDE.md vs Memory.md</h2>
+  <p>這兩個東西很容易搞混，關鍵差異在於<strong>誰來更新</strong>：</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th></th>
+        <th>CLAUDE.md</th>
+        <th>Memory.md</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>更新者</strong></td>
+        <td>你（手動編輯）</td>
+        <td>Claude（自動累積）</td>
+      </tr>
+      <tr>
+        <td><strong>內容類型</strong></td>
+        <td>固定規則與偏好</td>
+        <td>對話中發現的事實</td>
+      </tr>
+      <tr>
+        <td><strong>典型內容</strong></td>
+        <td>「回答請用繁體中文」</td>
+        <td>「Porter 喜歡用 PowerShell」</td>
+      </tr>
+      <tr>
+        <td><strong>結構</strong></td>
+        <td>你自己設計</td>
+        <td>Claude 自動整理</td>
+      </tr>
+      <tr>
+        <td><strong>位置</strong></td>
+        <td><code>~/.claude/CLAUDE.md</code></td>
+        <td>依版本有所不同（見下方）</td>
+      </tr>
+      <tr>
+        <td><strong>適用範圍</strong></td>
+        <td>你設定的範圍</td>
+        <td>所有對話</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>三層記憶架構</h2>
+  <p>Claude Code 的記憶系統分三個層次，由持久度排列：</p>
+
+  <style>
+    .mem-layers { display:flex; flex-direction:column; gap:.75rem; margin:1.5rem 0; }
+    .mem-layer { border:1px solid var(--border); border-radius:10px; padding:1.1rem 1.25rem; background:var(--bg2); display:flex; gap:1rem; align-items:flex-start; }
+    .mem-num { width:36px; height:36px; background:var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; flex-shrink:0; }
+    .mem-title { font-weight:600; color:var(--text); margin-bottom:.25rem; }
+    .mem-desc { font-size:.85rem; color:var(--text2); }
+  </style>
+  <div class="mem-layers">
+    <div class="mem-layer">
+      <div class="mem-num">1</div>
+      <div>
+        <div class="mem-title">CLAUDE.md — 顯式記憶</div>
+        <div class="mem-desc">你手動撰寫的規則和設定。最可靠、最精確。適合固定不變的規則。</div>
+      </div>
+    </div>
+    <div class="mem-layer">
+      <div class="mem-num">2</div>
+      <div>
+        <div class="mem-title">Auto Memory（Memory.md）— 隱式記憶</div>
+        <div class="mem-desc">Claude 自動從對話中學習並儲存的事實。跨 session 累積，無需你手動維護。</div>
+      </div>
+    </div>
+    <div class="mem-layer">
+      <div class="mem-num">3</div>
+      <div>
+        <div class="mem-title">Session 對話歷史 — 即時記憶</div>
+        <div class="mem-desc">目前對話的完整上下文。session 結束後不保留（除非摘要進入 Memory.md）。</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Auto Memory（自動記憶）</h2>
+  <p>Claude Code v2.1.59 以上版本支援自動記憶功能，<strong>預設啟用</strong>。</p>
+  <p>工作原理：</p>
+  <ol>
+    <li>每次 session 結束時，Claude 自動整理這次對話中發現的重要事實</li>
+    <li>儲存到 <code>~/.claude/projects/&lt;project-hash&gt;/memory/MEMORY.md</code></li>
+    <li>下次 session 開始時，自動載入前 200 行或 25KB 的記憶內容</li>
+    <li>隨時間累積，Claude 對你和你的專案越來越了解</li>
+  </ol>
+
+  <h2>Memory.md 的典型內容</h2>
+  <p>Claude 會自動記錄這類型的資訊：</p>
+
+  <CodeBlock lang="markdown" label="~/.claude/projects/.../memory/MEMORY.md（Claude 自動生成）" code={`# 使用者偏好
+- 使用 Windows 11 + PowerShell（不是 bash）
+- 回答偏好繁體中文
+- 喜歡看到實際可執行的程式碼範例
+- 不喜歡過多的解釋，直接給答案
+
+# 專案相關
+- 主要工作目錄：C:\\VSCode_Proj\\
+- Obsidian vault 位置：C:\\Obsidian\\vault\\
+- 工作日誌路徑：C:\\Obsidian\\vault\\工作日誌\\YYYY-MM-DD.md
+- 正在開發：Dify-based AI agent 系統
+
+# 技術偏好
+- 偏好 TypeScript over JavaScript
+- 使用 Vitest（不是 Jest）
+- 部署環境：Docker + AWS EC2
+- 資料庫：PostgreSQL
+
+# 注意事項
+- 使用者公司域名：gyro.com.tw
+- API 測試環境：http://localhost:3000`} />
+
+  <h2>管理記憶：<code>/memory</code> 指令</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /memory
+
+# 顯示目前載入的記憶來源：
+Memory sources:
+  1. ~/.claude/CLAUDE.md (global)          [2,340 tokens]
+  2. ./CLAUDE.md (project)                 [1,120 tokens]
+  3. ./CLAUDE.local.md (local)             [  380 tokens]
+  4. .claude/memory/MEMORY.md (auto)       [  890 tokens]
+
+Select a file to edit...`} />
+
+  <h3>直接告訴 Claude 要記住什麼</h3>
+  <CodeBlock lang="text" label="互動模式" code={`You: 幫我記住：我們的 staging 環境在 https://staging.example.com，
+      admin 帳號存在 .env.staging 檔案裡
+
+Claude: 好的，我已記錄到 Memory.md。
+✓ 已更新 .claude/memory/MEMORY.md`} />
+
+  <h3>清除記憶</h3>
+  <CodeBlock lang="text" label="互動模式" code={`You: /memory
+# 選擇對應的檔案，手動刪除不需要的內容
+
+# 或完全清除 auto memory
+You: 請清除所有 auto memory 的內容`} />
+
+  <h2>關閉自動記憶</h2>
+  <p>如果不想讓 Claude 自動記憶，可以在設定中關閉：</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /config
+# 找到 "Auto Memory" 設定，切換為 disabled`} />
+  <p>或在 <code>~/.claude/settings.json</code> 中加入：</p>
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "autoMemoryEnabled": false
+}`} />
+
+  <h2>最佳實踐</h2>
+  <ul>
+    <li><strong>不要同時用兩套系統記同樣的事</strong>——固定規則放 CLAUDE.md，動態事實讓 Memory.md 自動維護</li>
+    <li><strong>定期清理 Memory.md</strong>——過時的記憶（舊的 API endpoint、已廢棄的設定）會干擾 Claude</li>
+    <li><strong>高優先規則寫在 CLAUDE.md</strong>——Memory.md 的內容不如 CLAUDE.md 可靠，重要規則永遠放 CLAUDE.md</li>
+    <li><strong>主動告知重要事實</strong>——不要等 Claude 自己發現，直接說「幫我記住 X」效率更高</li>
+  </ul>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>小結：如何分工</strong>
+      <p><strong>CLAUDE.md</strong> = 你的規則手冊（你維護）<br/>
+      <strong>Memory.md</strong> = Claude 的學習筆記（它自己維護）<br/>
+      兩者互補，讓每次對話都從最佳起點開始。</p>
+    </div>
+  </div>
+
+</DocsLayout>

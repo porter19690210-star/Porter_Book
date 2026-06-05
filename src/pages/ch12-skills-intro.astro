@@ -1,0 +1,149 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="官方六大類 Skills"
+  currentSlug="ch12-skills-intro"
+  description="Anthropic 官方預先準備的六大類 Skills，涵蓋文件格式、前端設計、資料處理、研究整理、工程協助與自訂技能。"
+  prevChapter={{ title: "Hooks 安全性應用", slug: "ch11-hooks-security" }}
+  nextChapter={{ title: "使用內建 Skills", slug: "ch13-skills-builtin" }}
+>
+  <p class="clabel">第 12 章 · Part 5：Skills</p>
+  <h1>官方六大類 Skills</h1>
+  <p class="cdesc">官方已經幫你準備好幾類 Skill——問對問題就會自動觸發。</p>
+
+  <h2>什麼是 Skills？</h2>
+  <p>
+    Skills 是 Claude Code 的<strong>可重複使用工作流程</strong>。把常用任務的完整步驟封裝成一個 Slash Command，
+    一句話啟動，Claude 自動按照流程走。
+  </p>
+  <p>
+    和直接問 Claude 的差別：Skills 有<strong>明確的觸發條件</strong>、<strong>結構化的執行流程</strong>、
+    以及可共享的<strong>標準化輸出</strong>。
+  </p>
+
+  <h2>官方六大類</h2>
+
+  <style>
+    .skill-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:1rem; margin:1.5rem 0; }
+    .skill-card { border:1px solid var(--border); border-radius:10px; padding:1.25rem; background:var(--bg2); position:relative; }
+    .skill-cat { font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--accent); margin-bottom:.4rem; }
+    .skill-num { position:absolute; top:.9rem; right:.9rem; font-size:.7rem; font-weight:700; color:var(--muted); background:var(--bg3); padding:.15rem .5rem; border-radius:4px; }
+    .skill-title { font-size:1rem; font-weight:600; font-family:var(--serif); color:var(--text); margin-bottom:.4rem; }
+    .skill-desc { font-size:.83rem; color:var(--text2); margin-bottom:.6rem; line-height:1.5; }
+    .skill-tags { display:flex; flex-wrap:wrap; gap:.3rem; }
+    .skill-tag { font-size:.68rem; padding:.15rem .45rem; background:var(--bg3); border:1px solid var(--border); border-radius:4px; color:var(--muted); font-family:var(--mono); }
+  </style>
+
+  <div class="skill-grid">
+    <div class="skill-card">
+      <div class="skill-num">類別 / 01</div>
+      <div class="skill-cat">文件格式</div>
+      <div class="skill-title">文件格式</div>
+      <div class="skill-desc">讀 PDF、改 DOCX 表格、做 XLSX 報表、產 PPTX 簡報。不必先轉檔。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">PDF</span>
+        <span class="skill-tag">DOCX</span>
+        <span class="skill-tag">XLSX</span>
+        <span class="skill-tag">PPTX</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-num">類別 / 02</div>
+      <div class="skill-cat">前端與設計</div>
+      <div class="skill-title">前端與設計</div>
+      <div class="skill-desc">做 deck、prototype、wireframe、SVG 動畫。能直接吐出可用 HTML / CSS。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">HTML</span>
+        <span class="skill-tag">CSS</span>
+        <span class="skill-tag">SVG</span>
+        <span class="skill-tag">wireframe</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-num">類別 / 03</div>
+      <div class="skill-cat">資料處理</div>
+      <div class="skill-title">資料處理</div>
+      <div class="skill-desc">試算表分析、CSV 清洗、簡單統計，連同 pandas / openpyxl 一起出來。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">CSV</span>
+        <span class="skill-tag">pandas</span>
+        <span class="skill-tag">Excel</span>
+        <span class="skill-tag">統計</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-num">類別 / 04</div>
+      <div class="skill-cat">研究與整理</div>
+      <div class="skill-title">研究與整理</div>
+      <div class="skill-desc">抓網頁、整理筆記、產出 markdown。適合做技術評估、競品摘要。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">web</span>
+        <span class="skill-tag">markdown</span>
+        <span class="skill-tag">摘要</span>
+        <span class="skill-tag">研究</span>
+      </div>
+    </div>
+    <div class="skill-card">
+      <div class="skill-num">類別 / 05</div>
+      <div class="skill-cat">工程協助</div>
+      <div class="skill-title">工程協助</div>
+      <div class="skill-desc">建立專案骨架、跨檔 refactor、spec → code、code → doc。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">scaffold</span>
+        <span class="skill-tag">refactor</span>
+        <span class="skill-tag">spec</span>
+        <span class="skill-tag">docs</span>
+      </div>
+    </div>
+    <div class="skill-card" style="border-color:var(--accent);background:var(--abg)">
+      <div class="skill-num">類別 / 06</div>
+      <div class="skill-cat" style="color:var(--accent)">你自己寫的 ←</div>
+      <div class="skill-title">自訂 Skills</div>
+      <div class="skill-desc">把部門裡只有你會的東西沉澱下來，交給每位同事使用。</div>
+      <div class="skill-tags">
+        <span class="skill-tag">custom</span>
+        <span class="skill-tag">team</span>
+        <span class="skill-tag">workflow</span>
+      </div>
+    </div>
+  </div>
+
+  <h2>如何查看可用的 Skills</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /skills
+
+Available skills:
+  /review          程式碼審查（correctness / security / perf）
+  /build           逐步建置並測試
+  /spec            撰寫規格文件
+  /ship            上線前檢查清單
+  /simplify        程式碼簡化
+  /plan            任務拆解與規劃
+  /deep-research   多來源深度研究
+  /local-video-note  本地影片 → Obsidian 筆記（自訂）
+  ...`} />
+
+  <h2>Skills vs 直接問 Claude</h2>
+  <table>
+    <thead>
+      <tr><th></th><th>直接問 Claude</th><th>Skill</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>觸發方式</strong></td><td>自然語言描述</td><td>Slash command</td></tr>
+      <tr><td><strong>流程一致性</strong></td><td>每次可能不同</td><td>固定標準流程</td></tr>
+      <tr><td><strong>可共享</strong></td><td>只在你的 session</td><td>可放 git 讓團隊共用</td></tr>
+      <tr><td><strong>文件化</strong></td><td>無</td><td>有 TRIGGER 說明</td></tr>
+      <tr><td><strong>適用時機</strong></td><td>一次性、探索性任務</td><td>重複性、標準化任務</td></tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>Skills 的本質</strong>
+      <p>Skills 其實就是放在特定目錄下的 Markdown 檔案，裡面包含執行指示。Claude 在對話開始時載入，偵測到符合 TRIGGER 條件的請求就自動套用。下一章會教你如何使用，第 14 章教你自己寫。</p>
+    </div>
+  </div>
+
+</DocsLayout>

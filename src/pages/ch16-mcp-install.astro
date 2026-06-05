@@ -1,0 +1,144 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="安裝 MCP Server"
+  currentSlug="ch16-mcp-install"
+  description="在 settings.json 設定 MCP Server，連接瀏覽器、GitHub、Obsidian 等常用工具。"
+  prevChapter={{ title: "MCP 是什麼？", slug: "ch15-mcp-intro" }}
+  nextChapter={{ title: "自製 MCP Server", slug: "ch17-mcp-custom" }}
+>
+  <p class="clabel">第 16 章 · Part 6：MCP Plugin</p>
+  <h1>安裝 MCP Server</h1>
+  <p class="cdesc">三步驟：安裝套件、設定 settings.json、重啟 Claude Code。</p>
+
+  <h2>設定位置</h2>
+  <p>MCP Server 在 <code>~/.claude/settings.json</code> 的 <code>mcpServers</code> 區塊設定：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json 結構" code={`{
+  "mcpServers": {
+    "server-name": {
+      "command": "node",
+      "args": ["/path/to/server/index.js"],
+      "env": {
+        "API_KEY": "your-key"
+      }
+    }
+  }
+}`} />
+
+  <h2>範例 1：Filesystem Server</h2>
+  <p>讓 Claude 可以讀寫指定目錄的檔案（比內建 Read/Write 工具更有彈性的存取控制）：</p>
+
+  <CodeBlock lang="bash" label="bash — 安裝" code={`npm install -g @modelcontextprotocol/server-filesystem`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/VSCode_Proj",
+        "C:/Obsidian/vault"
+      ]
+    }
+  }
+}`} />
+
+  <p>設定後，Claude 可以呼叫 <code>read_file</code>、<code>write_file</code>、<code>list_directory</code> 等工具，且只能存取你指定的目錄。</p>
+
+  <h2>範例 2：GitHub Server</h2>
+  <CodeBlock lang="bash" label="bash — 安裝" code={`npm install -g @modelcontextprotocol/server-github`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
+      }
+    }
+  }
+}`} />
+
+  <p>設定後 Claude 可以：建立 Issue、列出 PR、讀取 commit 歷史、搜尋程式碼等。</p>
+
+  <h2>範例 3：Playwright 瀏覽器自動化</h2>
+  <CodeBlock lang="bash" label="bash — 安裝" code={`npm install -g @executeautomation/playwright-mcp-server
+npx playwright install`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"]
+    }
+  }
+}`} />
+
+  <p>設定後 Claude 可以：開啟網頁、點擊、填表、截圖、等待元素載入——直接在對話中完成 E2E 測試。</p>
+
+  <h2>完整 settings.json 範例</h2>
+  <CodeBlock lang="json" label="~/.claude/settings.json（多個 MCP）" code={`{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "C:/VSCode_Proj"
+      ]
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_..."
+      }
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@executeautomation/playwright-mcp-server"]
+    }
+  },
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [{ "type": "command", "command": "powershell -File ~/.claude/hooks/write-diary.ps1" }]
+      }
+    ]
+  }
+}`} />
+
+  <h2>驗證 MCP 連線</h2>
+  <CodeBlock lang="text" label="互動模式" code={`# 設定完成後重啟 Claude Code，然後：
+You: /mcp
+
+Connected MCP servers:
+  ✓ filesystem    (3 tools)
+  ✓ github        (8 tools)
+  ✓ playwright    (12 tools)
+
+# 讓 Claude 使用 MCP 工具
+You: 用 playwright 開啟 https://claude.ai 並截圖`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>MCP Server 連線失敗？</strong>
+      <p>執行 <code>/mcp</code> 確認狀態，或用 <code>/doctor</code> 診斷。常見原因：套件未安裝（用 <code>npm install -g</code>）、env 變數未設、路徑錯誤。Windows 注意路徑用正斜線或雙反斜線。</p>
+    </div>
+  </div>
+
+  <h2>用 <code>/mcp</code> 管理</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /mcp
+
+# 功能：
+# - 查看所有已設定的 MCP Server 及連線狀態
+# - 列出每個 Server 提供的工具
+# - 手動重連失敗的 Server`} />
+
+</DocsLayout>

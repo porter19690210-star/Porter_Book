@@ -1,0 +1,134 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="自己寫 Skill"
+  currentSlug="ch14-skills-custom"
+  description="把你常做的工作流程封裝成 Skill，讓 Claude 一個指令自動完成整個流程。"
+  prevChapter={{ title: "使用內建 Skills", slug: "ch13-skills-builtin" }}
+  nextChapter={{ title: "MCP 是什麼？", slug: "ch15-mcp-intro" }}
+>
+  <p class="clabel">第 14 章 · Part 5：Skills</p>
+  <h1>自己寫 Skill</h1>
+  <p class="cdesc">Skill 就是一個 Markdown 檔案。告訴 Claude「什麼時候啟動」以及「要做什麼」，就完成了。</p>
+
+  <h2>Skill 的本質</h2>
+  <p>
+    Skill 是放在 <code>~/.claude/skills/</code> 目錄下的 <code>.md</code> 檔案。
+    Claude Code 在每次對話開始時掃描這個目錄，當使用者的請求符合 TRIGGER 條件時，自動套用對應的 Skill。
+  </p>
+
+  <h2>基本結構</h2>
+  <CodeBlock lang="markdown" label="~/.claude/skills/my-skill.md" code={`---
+description: 這個 Skill 做什麼的一句話說明
+trigger: 什麼情況下自動觸發（給 Claude 判斷用）
+argument-hint: 使用者需要提供的參數說明（可選）
+---
+
+# Skill 名稱
+
+## 執行流程
+1. 步驟一：...
+2. 步驟二：...
+3. 步驟三：...
+
+## 輸出格式
+說明最終要產出什麼格式的結果。
+
+## 注意事項
+- 特殊限制或邊界情況`} />
+
+  <h2>實戰範例：本地影片轉 Obsidian 筆記</h2>
+  <p>這是一個真實使用的 Skill：把本地影片檔案轉成帶時間軸的 Obsidian 筆記。</p>
+
+  <CodeBlock lang="markdown" label="~/.claude/skills/local-video-note.md" code={`---
+description: 擷取本地影片音訊、Whisper 語音轉文字，自動建立 Obsidian 雙語影片筆記。
+trigger: 當使用者提到本地影片轉文字、影片筆記、local video 等關鍵字時使用
+argument-hint: 影片檔案路徑（必填），開始時間與結束時間（可選，格式 HH:MM:SS）
+---
+
+# Local Video Note
+
+## 執行流程
+
+1. **確認參數**：取得影片路徑，確認檔案存在
+2. **裁切音訊**（若有指定時間範圍）：
+   使用 ffmpeg 擷取指定時間段
+3. **轉換格式**：ffmpeg 將影片音訊轉為 WAV（16kHz, mono）
+4. **語音辨識**：執行 faster-whisper 進行轉錄
+   - 語言偵測：自動
+   - 輸出：帶時間戳記的文字段落
+5. **建立筆記**：在 Obsidian vault 建立 YYYY-MM-DD-影片名稱.md
+   - 包含影片路徑、時間範圍、全文逐字稿
+   - 若為英文：產生中英雙語對照
+
+## 輸出格式
+Obsidian Markdown，存放於 C:\\Obsidian\\vault\\影片筆記\\
+
+## 注意事項
+- 需要系統安裝：ffmpeg、faster-whisper
+- GPU 加速：若有 NVIDIA GPU，自動使用 CUDA`} />
+
+  <p>使用方式：</p>
+  <CodeBlock lang="text" label="互動模式" code={`# 整個影片
+You: /local-video-note C:\Videos\meeting-2026-06-04.mp4
+
+# 指定時間段（只處理 5:00 到 12:30）
+You: /local-video-note C:\Videos\conference.mp4 --start 00:05:00 --end 00:12:30`} />
+
+  <h2>更多 Skill 範例結構</h2>
+
+  <h3>範例：每日工作計畫</h3>
+  <CodeBlock lang="markdown" label="~/.claude/skills/daily-plan.md" code={`---
+description: 根據今日日誌和 TODO，生成今日工作計畫
+trigger: 當使用者說「今日計畫」「daily plan」「今天要做什麼」時觸發
+---
+
+# Daily Plan
+
+## 流程
+1. 讀取 Obsidian 今日工作日誌（若存在）
+2. 搜尋 TODO.md 中未完成項目
+3. 列出今日建議優先順序（P1/P2/P3）
+4. 輸出為 Obsidian 格式，寫入今日日誌開頭`} />
+
+  <h3>範例：Dify API 指令產生器</h3>
+  <CodeBlock lang="markdown" label="~/.claude/skills/dify-api-cmd.md" code={`---
+description: 根據描述產生對應的 Dify API curl 指令
+trigger: 當使用者要呼叫 Dify API、測試 Dify endpoint 時觸發
+---
+
+# Dify API Command Generator
+
+## 流程
+1. 確認 API 類型（Chat / Completion / Agent）
+2. 讀取 .env 中的 DIFY_API_KEY
+3. 根據描述產生完整的 curl 指令（含 headers、body）
+4. 同時產生 PowerShell 版本（Invoke-RestMethod）`} />
+
+  <h2>Skills 放置位置</h2>
+  <table>
+    <thead>
+      <tr><th>位置</th><th>範圍</th><th>適用情境</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>~/.claude/skills/</code></td><td>個人全域</td><td>個人工作流程，所有專案適用</td></tr>
+      <tr><td><code>.claude/skills/</code></td><td>專案級</td><td>特定專案的標準流程，可 git commit 共享</td></tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>寫好 TRIGGER 是關鍵</strong>
+      <p>TRIGGER 是給 Claude 看的描述，說明什麼情況下應該套用這個 Skill。寫越具體越好，例如「當使用者提到本地影片轉文字、/local-video-note 指令、影片筆記等關鍵字時」。模糊的 TRIGGER 會導致 Skill 被誤觸發。</p>
+    </div>
+  </div>
+
+  <h2>列出所有 Skills</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /skills
+
+# 列出所有已載入的 Skills（官方 + 自訂）`} />
+
+</DocsLayout>

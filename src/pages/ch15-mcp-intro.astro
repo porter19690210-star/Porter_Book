@@ -1,0 +1,130 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="MCP 是什麼？"
+  currentSlug="ch15-mcp-intro"
+  description="Model Context Protocol——讓 Claude 連接任何外部工具的標準協定。"
+  prevChapter={{ title: "自己寫 Skill", slug: "ch14-skills-custom" }}
+  nextChapter={{ title: "安裝 MCP Server", slug: "ch16-mcp-install" }}
+>
+  <p class="clabel">第 15 章 · Part 6：MCP Plugin</p>
+  <h1>MCP 是什麼？</h1>
+  <p class="cdesc">Model Context Protocol——讓 Claude 與任何外部工具、服務、資料庫溝通的標準協定。比自訂工具更標準，比 Hooks 更強大。</p>
+
+  <h2>一句話定義</h2>
+  <p>
+    <strong>MCP（Model Context Protocol）</strong> 是 Anthropic 制定的開放標準，
+    定義了 AI 模型如何與外部工具溝通。
+    有了 MCP，Claude Code 可以直接呼叫你的資料庫、操作瀏覽器、讀取 Obsidian 筆記——
+    只要有對應的 MCP Server。
+  </p>
+
+  <h2>架構</h2>
+
+  <div style="border:1px solid var(--border);border-radius:12px;padding:1.75rem;background:var(--bg2);margin:1.5rem 0;font-size:.85rem">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:.6rem;font-family:var(--mono)">
+      <div style="padding:.5rem 2rem;border:2px solid var(--accent);border-radius:8px;color:var(--text);background:var(--bg);font-weight:600">
+        ⚡ Claude Code（MCP Client）
+      </div>
+      <div style="color:var(--muted);font-size:.8rem">↕ MCP Protocol（JSON-RPC over stdio / SSE）</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;width:100%;max-width:500px">
+        <div style="padding:.6rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.78rem">
+          🗄️<br/><strong>filesystem</strong><br/><span style="color:var(--muted);font-size:.7rem">讀寫本地檔案</span>
+        </div>
+        <div style="padding:.6rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.78rem">
+          🌐<br/><strong>browser</strong><br/><span style="color:var(--muted);font-size:.7rem">控制 Chrome</span>
+        </div>
+        <div style="padding:.6rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.78rem">
+          📝<br/><strong>obsidian</strong><br/><span style="color:var(--muted);font-size:.7rem">管理筆記</span>
+        </div>
+        <div style="padding:.6rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.78rem">
+          🐙<br/><strong>github</strong><br/><span style="color:var(--muted);font-size:.7rem">PR / Issues</span>
+        </div>
+        <div style="padding:.6rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.78rim">
+          🗃️<br/><strong>postgres</strong><br/><span style="color:var(--muted);font-size:.7rem">查詢資料庫</span>
+        </div>
+        <div style="padding:.6rem .5rem;background:var(--abg);border:1px solid var(--accent);border-radius:8px;text-align:center;font-size:.78rem;color:var(--accent)">
+          🔧<br/><strong>自訂</strong><br/><span style="font-size:.7rem">你的 API</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h2>MCP vs 內建工具 vs Hooks</h2>
+  <table>
+    <thead>
+      <tr><th></th><th>內建工具</th><th>Hooks</th><th>MCP Server</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>用途</strong></td>
+        <td>讀寫檔案、執行 shell</td>
+        <td>攔截 Claude 的動作</td>
+        <td>連接外部服務</td>
+      </tr>
+      <tr>
+        <td><strong>觸發</strong></td>
+        <td>Claude 主動呼叫</td>
+        <td>事件自動觸發</td>
+        <td>Claude 主動呼叫</td>
+      </tr>
+      <tr>
+        <td><strong>標準化</strong></td>
+        <td>Anthropic 內建</td>
+        <td>自訂腳本</td>
+        <td>開放協定，可共享</td>
+      </tr>
+      <tr>
+        <td><strong>範例</strong></td>
+        <td>Read, Edit, Bash</td>
+        <td>預防 rm -rf /</td>
+        <td>查詢 Postgres、控制瀏覽器</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>MCP 能做什麼？</h2>
+  <ul>
+    <li><strong>資料庫操作</strong>——讓 Claude 直接查詢 PostgreSQL、MongoDB、SQLite</li>
+    <li><strong>瀏覽器自動化</strong>——控制 Chrome 做 E2E 測試、截圖、填表</li>
+    <li><strong>雲端服務</strong>——讀寫 Google Drive、Notion、GitHub Issues</li>
+    <li><strong>Obsidian 整合</strong>——搜尋筆記、建立連結、更新 daily note</li>
+    <li><strong>自訂 API</strong>——把公司內部 API 包成工具讓 Claude 呼叫</li>
+    <li><strong>IoT / 工具</strong>——連接任何支援 MCP 協定的系統</li>
+  </ul>
+
+  <h2>MCP Server 生態</h2>
+  <p>社群與官方已有大量現成的 MCP Server：</p>
+  <table>
+    <thead>
+      <tr><th>Server</th><th>功能</th><th>來源</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>@modelcontextprotocol/server-filesystem</code></td><td>本地檔案讀寫（指定目錄）</td><td>官方</td></tr>
+      <tr><td><code>@modelcontextprotocol/server-github</code></td><td>GitHub Repos / PR / Issues</td><td>官方</td></tr>
+      <tr><td><code>@modelcontextprotocol/server-postgres</code></td><td>PostgreSQL 查詢</td><td>官方</td></tr>
+      <tr><td><code>@modelcontextprotocol/server-brave-search</code></td><td>Brave 搜尋引擎</td><td>官方</td></tr>
+      <tr><td><code>mcp-obsidian</code></td><td>Obsidian vault 操作</td><td>社群</td></tr>
+      <tr><td><code>@executeautomation/playwright-mcp-server</code></td><td>Playwright 瀏覽器自動化</td><td>社群</td></tr>
+    </tbody>
+  </table>
+
+  <div class="call info">
+    <span class="ci">ℹ️</span>
+    <div>
+      <strong>MCP 是開放標準</strong>
+      <p>MCP 協定是開源的，任何人都可以寫 MCP Server。完整的官方 Server 清單和社群貢獻可在 <a href="https://github.com/modelcontextprotocol/servers" target="_blank" rel="noopener">github.com/modelcontextprotocol/servers</a> 找到。</p>
+    </div>
+  </div>
+
+  <h2>查看目前連接的 MCP</h2>
+  <CodeBlock lang="text" label="互動模式" code={`You: /mcp
+
+Connected MCP servers:
+  ✓ filesystem    (3 tools: read_file, write_file, list_directory)
+  ✓ github        (8 tools: create_issue, list_prs, ...)
+  ✗ postgres      (disconnected)`} />
+
+</DocsLayout>

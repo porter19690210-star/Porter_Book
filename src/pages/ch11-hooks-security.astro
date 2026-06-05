@@ -1,0 +1,236 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="Hooks 安全性應用"
+  currentSlug="ch11-hooks-security"
+  description="用 Hooks 在技術層面強制執行安全規則——攔截危險指令、審計日誌、自動通知，讓 Claude Code 更安全可靠。"
+  prevChapter={{ title: "實戰：自動寫工作日誌", slug: "ch10-hooks-diary" }}
+  nextChapter={{ title: "官方六大類 Skills", slug: "ch12-skills-intro" }}
+>
+  <p class="clabel">第 11 章 · Part 4：Hooks</p>
+  <h1>Hooks 安全性應用</h1>
+  <p class="cdesc">CLAUDE.md 規則靠 Claude 自覺，Hooks 是技術層面的強制執行。攔截危險指令、記錄審計日誌、送出通知——這些都不需要 Claude 的配合。</p>
+
+  <h2>為什麼需要安全性 Hooks？</h2>
+  <p>你可以在 CLAUDE.md 寫「不要執行 <code>rm -rf</code>」，Claude 通常會遵守——但這依賴 Claude 正確理解並記住你的規則。在以下情況，這樣的「軟性約束」可能失效：</p>
+  <ul>
+    <li>多步驟自動化任務中，Claude 誤判了安全性</li>
+    <li>使用 <code>--dangerously-skip-permissions</code> 模式跑 batch 任務</li>
+    <li>你想確保<strong>無論如何</strong>某些指令都不會被執行</li>
+  </ul>
+  <p>Hooks 讓你在 shell 層面攔截——Claude 說要執行什麼，Hook 腳本先審查，不通過就直接擋下來，跟 Claude 的判斷無關。</p>
+
+  <h2>阻擋危險指令</h2>
+  <p>使用 <code>PreToolUse</code> 事件搭配 <code>matcher: "Bash"</code>，在每個 Bash 指令執行前進行安全檢查：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/security-check.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <CodeBlock lang="bash" label="~/.claude/hooks/security-check.sh" code={`#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin)['tool_input']['command'])")
+
+DANGEROUS_PATTERNS=("rm -rf /" "DROP TABLE" "git push --force" "format c:")
+
+for pattern in "\${DANGEROUS_PATTERNS[@]}"; do
+  if echo "$COMMAND" | grep -qi "$pattern"; then
+    echo '{"decision":"block","reason":"Dangerous command blocked: '"$pattern"'"}' >&2
+    exit 2
+  fi
+done
+
+exit 0`} />
+
+  <p>腳本邏輯說明：</p>
+  <ol>
+    <li>從 stdin 讀取 JSON，取出 <code>tool_input.command</code></li>
+    <li>逐一比對危險關鍵字清單</li>
+    <li>若匹配，輸出 JSON 到 stderr 並以 exit code 2 阻擋執行</li>
+    <li>若安全，exit code 0 允許通過</li>
+  </ol>
+
+  <p>執行腳本前，記得加上執行權限：</p>
+  <CodeBlock lang="bash" label="Terminal" code={`chmod +x ~/.claude/hooks/security-check.sh`} />
+
+  <h2>通知 Hook</h2>
+  <p>當 Claude 完成任務時，發送 Windows 桌面通知：</p>
+
+  <CodeBlock lang="powershell" label="~/.claude/hooks/notify.ps1" code={`# 從 stdin 讀取資料（Stop 事件）
+$data = $input | ConvertFrom-Json
+
+# 發送 Windows 桌面通知
+Add-Type -AssemblyName System.Windows.Forms
+$notify = New-Object System.Windows.Forms.NotifyIcon
+$notify.Icon = [System.Drawing.SystemIcons]::Information
+$notify.Visible = $true
+$notify.BalloonTipTitle = "Claude Code"
+$notify.BalloonTipText = "任務完成！Session: $($data.session_id)"
+$notify.ShowBalloonTip(3000)
+
+Start-Sleep -Milliseconds 3500
+$notify.Dispose()`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json（加入通知）" code={`{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File ~/.claude/hooks/notify.ps1"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <h2>審計日誌</h2>
+  <p>記錄每一條 Claude 執行過的 Bash 指令，方便事後查核：</p>
+
+  <CodeBlock lang="bash" label="~/.claude/hooks/audit-log.sh" code={`#!/bin/bash
+INPUT=$(cat)
+COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['tool_input'].get('command',''))")
+SESSION=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('session_id','unknown'))")
+TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+LOG_FILE=~/.claude/audit.log
+
+echo "[$TIMESTAMP] [$SESSION] $COMMAND" >> "$LOG_FILE"
+exit 0`} />
+
+  <CodeBlock lang="json" label="~/.claude/settings.json（PostToolUse 審計）" code={`{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/audit-log.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <p>日誌格式範例：</p>
+  <CodeBlock lang="text" label="~/.claude/audit.log" code={`[2026-06-04 14:35:22] [sess_abc123] ls -la
+[2026-06-04 14:35:45] [sess_abc123] npm run build
+[2026-06-04 14:36:10] [sess_abc123] git status`} />
+
+  <h2>PermissionRequest Hook</h2>
+  <p><code>PermissionRequest</code> 事件在 Claude 請求執行需要使用者確認的操作時觸發。你可以用 Hook 自動批准安全的操作、攔截高風險的操作：</p>
+
+  <CodeBlock lang="json" label="~/.claude/settings.json" code={`{
+  "hooks": {
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/hooks/auto-approve.sh"
+          }
+        ]
+      }
+    ]
+  }
+}`} />
+
+  <CodeBlock lang="bash" label="~/.claude/hooks/auto-approve.sh" code={`#!/bin/bash
+INPUT=$(cat)
+TOOL=$(echo "$INPUT" | python3 -c "import sys,json; print(json.load(sys.stdin).get('tool_name',''))")
+
+# 自動批准唯讀操作
+SAFE_TOOLS=("Read" "Glob" "Grep" "WebSearch" "WebFetch")
+
+for tool in "\${SAFE_TOOLS[@]}"; do
+  if [ "$TOOL" = "$tool" ]; then
+    echo '{"decision":"approve"}'
+    exit 0
+  fi
+done
+
+# 其他操作讓 Claude 繼續詢問使用者
+exit 0`} />
+
+  <h2>最佳實踐表</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>情境</th>
+        <th>Hook 事件</th>
+        <th>類型</th>
+        <th>說明</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>攔截危險 Bash 指令</td>
+        <td><code>PreToolUse</code></td>
+        <td><code>command</code></td>
+        <td>exit 2 阻擋，exit 0 放行</td>
+      </tr>
+      <tr>
+        <td>記錄所有執行指令</td>
+        <td><code>PostToolUse</code></td>
+        <td><code>command</code></td>
+        <td>追加到 audit.log，不影響執行</td>
+      </tr>
+      <tr>
+        <td>任務完成桌面通知</td>
+        <td><code>Stop</code></td>
+        <td><code>command</code></td>
+        <td>PowerShell 發送 Windows 通知</td>
+      </tr>
+      <tr>
+        <td>自動批准唯讀工具</td>
+        <td><code>PermissionRequest</code></td>
+        <td><code>command</code></td>
+        <td>減少確認彈窗干擾</td>
+      </tr>
+      <tr>
+        <td>Slack / Teams 告警</td>
+        <td><code>PostToolUseFailure</code></td>
+        <td><code>http</code></td>
+        <td>工具失敗時 POST 到 Webhook</td>
+      </tr>
+      <tr>
+        <td>AI 審核使用者輸入</td>
+        <td><code>UserPromptSubmit</code></td>
+        <td><code>prompt</code></td>
+        <td>LLM 評估輸入是否符合規範</td>
+      </tr>
+      <tr>
+        <td>session 結束後清理</td>
+        <td><code>SessionEnd</code></td>
+        <td><code>command</code></td>
+        <td>刪除暫存檔、釋放資源</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="call warn">
+    <span class="ci">⚠️</span>
+    <div>
+      <strong>Hook 腳本的安全性</strong>
+      <p>Hook 腳本本身也可能成為安全漏洞：確保腳本只有你自己可以寫入（<code>chmod 700</code>）、不要在腳本中 hardcode 密碼或 API key、避免直接將 stdin 內容插入 shell 指令（使用 python3 解析 JSON 而非 eval）。</p>
+    </div>
+  </div>
+
+</DocsLayout>

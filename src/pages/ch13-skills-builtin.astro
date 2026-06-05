@@ -1,0 +1,100 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="使用內建 Skills"
+  currentSlug="ch13-skills-builtin"
+  description="掌握 /review、/build、/spec、/ship 等最常用的內建 Skills，把重複工作流程化。"
+  prevChapter={{ title: "官方六大類 Skills", slug: "ch12-skills-intro" }}
+  nextChapter={{ title: "自己寫 Skill", slug: "ch14-skills-custom" }}
+>
+  <p class="clabel">第 13 章 · Part 5：Skills</p>
+  <h1>使用內建 Skills</h1>
+  <p class="cdesc">一個 Slash Command，啟動完整的工作流程。</p>
+
+  <h2>最常用的內建 Skills</h2>
+
+  <h3>/review — 程式碼審查</h3>
+  <p>對目前 diff 或指定檔案做五軸審查：正確性、可讀性、架構、安全性、效能。</p>
+  <CodeBlock lang="text" label="互動模式" code={`# 審查目前的 git diff
+You: /review
+
+# 指定深度
+You: /review --effort high
+
+# 自動修復找到的問題
+You: /review --fix
+
+# 發佈為 PR inline comment（需設定 GitHub）
+You: /review --comment`} />
+
+  <h3>/build — 逐步建置</h3>
+  <p>讓 Claude 按照「建置 → 測試 → 修正」循環執行，直到通過或你叫停。</p>
+  <CodeBlock lang="text" label="互動模式" code={`# 建置並確保測試通過
+You: /build
+
+# 指定目標
+You: /build 完成 user profile API 的實作`} />
+
+  <h3>/spec — 撰寫規格文件</h3>
+  <p>在動手寫程式碼之前，先產出結構化的規格文件（spec-driven development）。</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /spec 設計一個支援多租戶的訂閱計費系統
+
+# Claude 會產出：
+# - 功能需求
+# - 資料模型
+# - API 設計
+# - 邊界情況與限制
+# 確認 spec 後再開始實作`} />
+
+  <h3>/plan — 任務規劃</h3>
+  <p>把複雜任務拆解成可執行的步驟清單，設定驗收條件。</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /plan 把 Express.js 後端遷移到 Fastify，不中斷現有 API`} />
+
+  <h3>/ship — 上線前檢查清單</h3>
+  <p>上線前的系統性檢查：測試、型別、安全性、效能、文件。</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /ship
+
+# 並行執行多個專責 persona 檢查：
+# ✓ 測試通過
+# ✓ 型別無錯誤
+# ✓ 無已知安全漏洞
+# ✓ 效能無明顯瓶頸
+# ✓ CHANGELOG 已更新
+# → Go / No-Go 結論`} />
+
+  <h3>/simplify — 程式碼簡化</h3>
+  <p>在不改變行為的前提下，精簡程式碼結構。</p>
+  <CodeBlock lang="text" label="互動模式" code={`# 簡化目前修改的程式碼
+You: /simplify
+
+# 指定目標
+You: /simplify src/utils/date.ts`} />
+
+  <h3>/deep-research — 深度研究</h3>
+  <p>多來源網路搜尋 → 交叉驗證 → 產出引用報告。</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /deep-research Claude Code 與 GitHub Copilot Workspace 的功能比較`} />
+
+  <h2>使用 Tips</h2>
+  <table>
+    <thead>
+      <tr><th>技巧</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>加參數</td><td>多數 Skills 支援 <code>--effort low/medium/high</code> 控制深度</td></tr>
+      <tr><td>加說明</td><td><code>/review 重點關注 SQL injection 風險</code></td></tr>
+      <tr><td>查 Skill 說明</td><td><code>/help review</code> 顯示 Skill 的詳細說明與參數</td></tr>
+      <tr><td>組合使用</td><td>先 <code>/spec</code> 確認方向，再 <code>/build</code>，最後 <code>/ship</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>Skills 也能自動觸發</strong>
+      <p>你不一定要輸入 Slash Command。在對話中說「幫我審查這個 PR 的安全性」，如果對應 Skill 的 TRIGGER 條件符合，Claude 會自動套用該 Skill 的執行流程。</p>
+    </div>
+  </div>
+
+</DocsLayout>

@@ -1,0 +1,186 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import CodeBlock from '../components/CodeBlock.astro';
+---
+<DocsLayout
+  title="第一次對話"
+  currentSlug="ch03-first-chat"
+  description="學會啟動 Claude Code、進行第一個對話，以及掌握最常用的 Slash Commands。"
+  prevChapter={{ title: "安裝與環境設定", slug: "ch02-install" }}
+  nextChapter={{ title: "三大模型比較", slug: "ch04-models" }}
+>
+  <p class="clabel">第 3 章 · Part 1：入門</p>
+  <h1>第一次對話</h1>
+  <p class="cdesc">三種啟動方式、基本操作流程，以及你會一直用到的 Slash Commands。</p>
+
+  <h2>三種啟動方式</h2>
+  <p>根據使用情境選擇適合的啟動方式：</p>
+
+  <CodeBlock lang="bash" label="bash" code={`# 方式 1：互動模式（REPL）——最常用
+claude
+
+# 方式 2：單次指令——適合快速任務
+claude "解釋 src/auth.ts 這個檔案的作用"
+
+# 方式 3：Headless 模式——適合腳本、CI/CD
+claude --print "列出這個專案所有的 API endpoint"`} />
+
+  <table>
+    <thead>
+      <tr><th>模式</th><th>指令</th><th>適用情境</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>互動 REPL</strong></td>
+        <td><code>claude</code></td>
+        <td>日常開發、多輪對話、複雜任務</td>
+      </tr>
+      <tr>
+        <td><strong>單次指令</strong></td>
+        <td><code>claude "..."</code></td>
+        <td>快速查詢、一次性任務</td>
+      </tr>
+      <tr>
+        <td><strong>Headless</strong></td>
+        <td><code>claude --print "..."</code></td>
+        <td>腳本整合、CI/CD pipeline、輸出管道</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>第一個對話範例</h2>
+  <p>啟動 <code>claude</code> 後，嘗試這些基本操作：</p>
+
+  <CodeBlock lang="text" label="互動模式示範" code={`$ claude
+
+# ── 啟動後介面 ──────────────────────────────
+Claude Code v2.1.x  (claude-sonnet-4-6)
+Working directory: /your/project
+
+You: 讀取 README.md 並幫我摘要重點
+
+Claude: （自動讀取檔案，輸出摘要）
+
+You: 幫我在 src/utils.ts 裡加一個 formatDate 函式
+
+Claude: （讀取檔案 → 撰寫函式 → 儲存 → 回報結果）
+
+You: 執行 npm test 看看有沒有問題
+
+Claude: （執行測試 → 如果失敗則分析並修正）`} />
+
+  <h2>常用 Slash Commands</h2>
+  <p>在互動模式中輸入 <code>/</code> 開頭的指令來控制 Claude Code 的行為。以下是最常用的：</p>
+
+  <h3>對話控制</h3>
+  <table>
+    <thead>
+      <tr><th>指令</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/clear</code></td><td>開新對話，清除目前的對話歷史</td></tr>
+      <tr><td><code>/compact</code></td><td>壓縮對話歷史，節省 token 用量，適合長時間工作</td></tr>
+      <tr><td><code>/context</code></td><td>視覺化顯示目前 context 使用量（還剩多少空間）</td></tr>
+      <tr><td><code>/rewind</code></td><td>回滾到上一個 checkpoint（如果上一步改壞了可用）</td></tr>
+    </tbody>
+  </table>
+
+  <h3>模型與設定</h3>
+  <table>
+    <thead>
+      <tr><th>指令</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/model</code></td><td>切換 AI 模型（Haiku / Sonnet / Opus）</td></tr>
+      <tr><td><code>/model claude-opus-4-8</code></td><td>直接切換到指定模型</td></tr>
+      <tr><td><code>/config</code></td><td>開啟設定介面</td></tr>
+      <tr><td><code>/theme</code></td><td>更換介面顏色主題</td></tr>
+    </tbody>
+  </table>
+
+  <h3>資訊查詢</h3>
+  <table>
+    <thead>
+      <tr><th>指令</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/help</code></td><td>顯示所有可用指令說明</td></tr>
+      <tr><td><code>/usage</code></td><td>查看目前 session 的 token 用量與費用</td></tr>
+      <tr><td><code>/status</code></td><td>查看版本、目前模型、登入帳號</td></tr>
+      <tr><td><code>/doctor</code></td><td>診斷安裝與連線問題</td></tr>
+    </tbody>
+  </table>
+
+  <h3>記憶與設定檔</h3>
+  <table>
+    <thead>
+      <tr><th>指令</th><th>說明</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>/memory</code></td><td>查看與管理 CLAUDE.md 及跨對話記憶</td></tr>
+      <tr><td><code>/init</code></td><td>自動分析專案並產生 CLAUDE.md（新專案推薦）</td></tr>
+      <tr><td><code>/permissions</code></td><td>管理工具執行權限（允許/拒絕特定操作）</td></tr>
+    </tbody>
+  </table>
+
+  <h2>鍵盤快速鍵</h2>
+  <table>
+    <thead>
+      <tr><th>按鍵</th><th>功能</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><kbd>Enter</kbd></td><td>送出訊息</td></tr>
+      <tr><td><kbd>Shift</kbd>+<kbd>Enter</kbd></td><td>換行（多行輸入）</td></tr>
+      <tr><td><kbd>↑</kbd> / <kbd>↓</kbd></td><td>瀏覽輸入歷史</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd></td><td>中斷目前執行中的任務</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> ×2</td><td>離開 Claude Code</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>取消目前輸入</td></tr>
+    </tbody>
+  </table>
+
+  <h2>常見第一次操作範例</h2>
+
+  <h3>讓 Claude 認識你的專案</h3>
+  <CodeBlock lang="text" label="互動模式" code={`You: /init`} />
+  <p>Claude 會自動掃描你的專案結構、讀取 <code>package.json</code>、<code>README.md</code> 等檔案，然後生成一份 <code>CLAUDE.md</code>。這是快速讓 Claude 了解新專案的最佳方式。</p>
+
+  <h3>請 Claude 說明一段程式碼</h3>
+  <CodeBlock lang="bash" label="bash" code={`claude "解釋 src/middleware/auth.ts 這個檔案是怎麼運作的"`} />
+
+  <h3>修復錯誤</h3>
+  <CodeBlock lang="bash" label="bash" code={`claude "執行 npm test，如果有失敗的測試就修正它"`} />
+
+  <h3>新增功能</h3>
+  <CodeBlock lang="text" label="互動模式" code={`You: 在 src/api/users.ts 加一個 GET /users/:id/profile 的 endpoint，
+要驗證使用者身份，並回傳使用者的基本資料和最近 5 筆活動紀錄`} />
+
+  <div class="call tip">
+    <span class="ci">💡</span>
+    <div>
+      <strong>指令越具體，結果越好</strong>
+      <p>不要只說「修好這個 bug」，而是說「執行 npm test，找到 UserService.test.ts 失敗的原因，修正 src/services/user.ts 中的問題」。具體的指令能讓 Claude 更準確地執行任務。</p>
+    </div>
+  </div>
+
+  <h2>費用追蹤</h2>
+  <p>每次對話結束後，使用 <code>/usage</code> 查看本次 session 的花費：</p>
+  <CodeBlock lang="text" label="互動模式" code={`You: /usage
+
+Session Usage:
+  Input tokens:    24,832
+  Output tokens:   3,156
+  Cache read:      18,204
+  Estimated cost:  ~$0.08`} />
+  <p>養成定期查看的習慣，避免意外的高額費用。使用快取（Cache read）能大幅降低費用。</p>
+
+  <h2>如何離開</h2>
+  <CodeBlock lang="bash" label="bash" code={`# 方式 1：Slash command
+/exit
+
+# 方式 2：連按兩次 Ctrl+C
+^C^C
+
+# 方式 3：輸入 exit 或 quit
+exit`} />
+
+</DocsLayout>
